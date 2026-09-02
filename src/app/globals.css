@@ -1,0 +1,287 @@
+@import "tailwindcss";
+
+/* ============================================================
+   EAN design system tokens — EA Teal primary · Slate neutral
+   Fonts: Sentient (headings) + Atkinson Hyperlegible (body)
+   ============================================================ */
+
+@theme {
+  /* EA Teal ramp — #16879C is the brand mark */
+  --color-teal-50: #f6fdfe;
+  --color-teal-100: #dbf5fa;
+  --color-teal-200: #aae8f3;
+  --color-teal-300: #74daeb;
+  --color-teal-400: #43cce5;
+  --color-teal-500: #1db3ce;
+  --color-teal-600: #16879c;
+  --color-teal-700: #106574;
+  --color-teal-800: #0b424c;
+  --color-teal-900: #062328;
+  --color-teal-950: #031012;
+
+  /* Website-exact slate ramp */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  /* EA brand alias — use bg-ea-teal, text-ea-teal, border-ea-teal etc. */
+  --color-ea-teal: #16879c;
+
+  /* Self-hosted via next/font/local — see src/app/fonts.ts */
+  --font-sans: var(--font-atkinson), -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-serif: var(--font-sentient), Georgia, "Times New Roman", serif;
+}
+
+/* ── Light mode (default) ───────────────────────────────────── */
+:root {
+  --bg-page: #ffffff;
+  --bg-sidebar: #f8fafc;
+  --bg-card: #f1f5f9;
+  --border: #e2e8f0;
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+
+  --prose-heading: #0f172a;
+  --prose-body: #1e293b;
+  --prose-link: #16879c;
+  --prose-link-hover: #106574;
+  --prose-strong: #0f172a;
+
+  --teal-callout-bg: #f0fafb;
+  --teal-callout-border: #aae8f3;
+
+  --btn-solid-shadow:
+    0 0 0 4px rgba(3, 16, 18, 0.05),
+    inset 0 -3px rgba(3, 16, 18, 0.1),
+    inset 0 3px 0 0 rgba(255, 255, 255, 0.1);
+  --btn-solid-shadow-hover:
+    0 0 0 4px rgba(3, 16, 18, 0.1),
+    inset 0 -3px rgba(3, 16, 18, 0.1),
+    inset 0 3px 0 0 rgba(255, 255, 255, 0.1);
+  --btn-subtle-shadow:
+    inset 0 -3px rgba(3, 16, 18, 0.025),
+    inset 0 3px 0 0 rgba(3, 16, 18, 0.0125);
+  --card-elevated-shadow:
+    inset 0 -4px rgba(3, 16, 18, 0.025),
+    inset 0 4px 0 0 rgba(3, 16, 18, 0.0125);
+  --badge-section-shadow: 0 0 0 4px rgba(3, 16, 18, 0.025);
+}
+
+/* ── Dark mode override ─────────────────────────────────────── */
+/* Applies when system prefers dark AND no explicit override */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page: #020617;
+    --bg-sidebar: #0f172a;
+    --bg-card: #1e293b;
+    --border: #334155;
+
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    --prose-heading: #f1f5f9;
+    --prose-body: #cbd5e1;
+    --prose-link: #43cce5;
+    --prose-link-hover: #74daeb;
+    --prose-strong: #f8fafc;
+
+    --teal-callout-bg: #031012;
+    --teal-callout-border: #106574;
+  }
+}
+
+/* Applies when user explicitly chose dark */
+:root[data-theme="dark"] {
+  --bg-page: #020617;
+  --bg-sidebar: #0f172a;
+  --bg-card: #1e293b;
+  --border: #334155;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --prose-heading: #f1f5f9;
+  --prose-body: #cbd5e1;
+  --prose-link: #43cce5;
+  --prose-link-hover: #74daeb;
+  --prose-strong: #f8fafc;
+
+  --teal-callout-bg: #031012;
+  --teal-callout-border: #106574;
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* ── Button variants ────────────────────────────────────────── */
+.btn-key {
+  box-shadow: var(--btn-solid-shadow);
+  transition:
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-key:hover { box-shadow: var(--btn-solid-shadow-hover); }
+.btn-key:active { transform: translateY(1px); }
+
+.btn-key-subtle {
+  box-shadow: var(--btn-subtle-shadow);
+  transition:
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-key-subtle:active { transform: translateY(1px); }
+
+.card-lip { box-shadow: var(--card-elevated-shadow); }
+.badge-halo { box-shadow: var(--badge-section-shadow); }
+
+/* Dashed structural rules — EAN website motif */
+@utility rule-dashed-x {
+  border-left: 1px dashed var(--border);
+  border-right: 1px dashed var(--border);
+}
+@utility rule-dashed-y {
+  border-top: 1px dashed var(--border);
+}
+
+/* ── Prose — reading materials ──────────────────────────────── */
+@utility prose-content {
+  & h2 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 1.375rem;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--prose-heading);
+  }
+  & h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.125rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.375rem;
+    color: var(--prose-heading);
+  }
+  & p {
+    margin-bottom: 1rem;
+    line-height: 1.75;
+    color: var(--prose-body);
+  }
+  & ul,
+  & ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+  & li {
+    margin-bottom: 0.375rem;
+    line-height: 1.7;
+    color: var(--prose-body);
+  }
+  & blockquote {
+    border-left: 3px solid var(--color-teal-500);
+    margin: 1.25rem 0;
+    padding: 0.5rem 1rem;
+    background: var(--teal-callout-bg);
+    border-radius: 0 6px 6px 0;
+  }
+  & blockquote p {
+    color: var(--prose-body);
+    margin: 0;
+  }
+  & a {
+    color: var(--prose-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  & a:hover {
+    color: var(--prose-link-hover);
+  }
+  & strong {
+    font-weight: 600;
+    color: var(--prose-strong);
+  }
+  & em {
+    font-style: italic;
+    color: var(--prose-body);
+  }
+  & code {
+    font-family: ui-monospace, monospace;
+    font-size: 0.875em;
+    background: var(--bg-card);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    color: var(--prose-body);
+  }
+}
+
+/* ── Reset Circle/tiptap wrapper classes ────────────────────── */
+.tiptap,
+.ProseMirror,
+.circle-block-editor {
+  all: unset;
+  display: block;
+  white-space: normal !important;
+}
+
+/* ── Native control accents ─────────────────────────────────── */
+input[type="checkbox"],
+input[type="radio"],
+progress {
+  accent-color: var(--color-ea-teal);
+}
+
+/* ── Native select — prevent white-on-white in dark OS mode ─── */
+select {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+select option {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 135, 156, 0.35);
+}
+
+/* ── Sidebar / layout surfaces using CSS vars ───────────────── */
+.sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+}
+
+.lesson-card-border {
+  border-color: var(--border);
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; color: #000; }
+}

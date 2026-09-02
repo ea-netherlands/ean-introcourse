@@ -20,6 +20,7 @@ import { and, eq, gte, or, isNull } from "drizzle-orm";
 import { getAllWeeksWithLessons } from "@/lib/lessons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { googleCalendarUrl, outlookCalendarUrl } from "@/lib/calendar";
+import { ProfileEditForm } from "./profile-edit-form";
 
 export const dynamic = "force-dynamic";
 
@@ -113,7 +114,7 @@ export default async function AccountPage() {
               className="px-3 py-1.5 rounded-lg text-sm transition-colors"
               style={{ color: "var(--text-muted)" }}
             >
-              My group
+              Group chat
             </Link>
           )}
           {(me.role === "facilitator" || me.role === "admin") && (
@@ -123,6 +124,15 @@ export default async function AccountPage() {
               style={{ color: "var(--text-muted)" }}
             >
               Sessions
+            </Link>
+          )}
+          {(me.role === "facilitator" || me.role === "admin") && me.groupId && (
+            <Link
+              href={`/group/${me.groupId}/overview`}
+              className="px-3 py-1.5 rounded-lg text-sm transition-colors"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Overview
             </Link>
           )}
         </nav>
@@ -166,12 +176,21 @@ export default async function AccountPage() {
           className="rounded-2xl p-6 flex items-start gap-5"
           style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
         >
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0"
-            style={{ background: "var(--color-ea-teal)" }}
-          >
-            {initials}
-          </div>
+          {me.avatarUrl ? (
+            <img
+              src={me.avatarUrl}
+              alt={me.name}
+              className="w-14 h-14 rounded-full object-cover shrink-0"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
+          ) : (
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0"
+              style={{ background: "var(--color-ea-teal)" }}
+            >
+              {initials}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
               {me.name}
@@ -179,6 +198,11 @@ export default async function AccountPage() {
             <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
               {me.email}
             </p>
+            {me.bio && (
+              <p className="text-sm mt-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                {me.bio}
+              </p>
+            )}
             <div className="flex flex-wrap gap-2 mt-3">
               <span
                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -198,12 +222,19 @@ export default async function AccountPage() {
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium hover:opacity-80 transition"
                   style={{ background: "rgba(22,135,156,0.08)", color: "var(--color-ea-teal)" }}
                 >
-                  💬 {groupName}
+                  {groupName}
                 </Link>
               )}
             </div>
           </div>
         </div>
+
+        {/* Profile edit */}
+        <ProfileEditForm
+          currentName={me.name}
+          currentBio={me.bio ?? null}
+          currentAvatarUrl={me.avatarUrl ?? null}
+        />
 
         {/* Upcoming sessions */}
         {upcomingSessions.length > 0 && (
@@ -387,6 +418,19 @@ export default async function AccountPage() {
             })}
           </div>
         </section>
+        {/* Contact */}
+        <div className="text-center pt-4 pb-2">
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            Questions about the fellowship?{" "}
+            <a
+              href="mailto:programmes@effectiefaltruisme.nl"
+              className="underline hover:opacity-80 transition"
+              style={{ color: "var(--color-ea-teal)" }}
+            >
+              programmes@effectiefaltruisme.nl
+            </a>
+          </p>
+        </div>
       </main>
     </div>
   );

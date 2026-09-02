@@ -54,6 +54,14 @@ export default function NewPostForm({ groupId, myName }: Props) {
             ref={ref}
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                if (content.trim() && !sending) {
+                  handleSubmit(e as unknown as React.FormEvent);
+                }
+              }
+            }}
             rows={3}
             placeholder={`Share something with your group, ${myName.split(" ")[0]}…`}
             className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-none transition-colors"
@@ -64,7 +72,10 @@ export default function NewPostForm({ groupId, myName }: Props) {
             }}
           />
           {error && <p className="text-xs text-red-500">{error}</p>}
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+              Ctrl+Enter to post
+            </span>
             <button
               type="submit"
               disabled={sending || !content.trim()}

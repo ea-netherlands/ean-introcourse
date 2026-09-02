@@ -31,7 +31,7 @@ export function ReplyForm({ postId, groupId }: { postId: string; groupId: string
         type="text"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Reply…"
+        placeholder="Reply… (Enter to send)"
         className="flex-1 rounded-lg px-3 py-1.5 text-sm outline-none"
         style={{
           background: "var(--bg-hover)",

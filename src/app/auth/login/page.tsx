@@ -250,6 +250,15 @@ export default function LoginPage() {
             Browse materials
           </Link>
         </p>
+        <p className="mt-2 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+          Questions?{" "}
+          <a
+            href="mailto:programmes@effectiefaltruisme.nl"
+            className="underline hover:opacity-70 transition"
+          >
+            programmes@effectiefaltruisme.nl
+          </a>
+        </p>
       </div>
     </div>
   );

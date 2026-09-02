@@ -12,6 +12,7 @@ import { getCurrentParticipant } from "@/lib/auth";
 import {
   db, ensureMigrated,
   groups, participants, lessonProgress, applications, fellowshipSessions,
+  exerciseResponses, modules,
 } from "@/db";
 import { eq, inArray, and, gte } from "drizzle-orm";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -90,6 +91,40 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
           .where(inArray(applications.email, memberEmails))
       : [];
   const appByEmail = Object.fromEntries(appRows.map((a) => [a.email, a]));
+
+  // Fetch exercise responses for all members
+  const exerciseRows =
+    memberIds.length > 0
+      ? await db
+          .select({
+            participantId: exerciseResponses.participantId,
+            moduleId: exerciseResponses.moduleId,
+            questionKey: exerciseResponses.questionKey,
+            response: exerciseResponses.response,
+            submittedAt: exerciseResponses.submittedAt,
+          })
+          .from(exerciseResponses)
+          .where(inArray(exerciseResponses.participantId, memberIds))
+          .orderBy(exerciseResponses.submittedAt)
+      : [];
+
+  // Fetch module titles for those responses
+  const moduleIds = [...new Set(exerciseRows.map((r) => r.moduleId))];
+  const moduleRows =
+    moduleIds.length > 0
+      ? await db
+          .select({ id: modules.id, title: modules.title })
+          .from(modules)
+          .where(inArray(modules.id, moduleIds))
+      : [];
+  const moduleTitleById = Object.fromEntries(moduleRows.map((m) => [m.id, m.title]));
+
+  // Group exercise responses by participant
+  const exercisesByParticipant: Record<string, typeof exerciseRows> = {};
+  for (const row of exerciseRows) {
+    if (!exercisesByParticipant[row.participantId]) exercisesByParticipant[row.participantId] = [];
+    exercisesByParticipant[row.participantId].push(row);
+  }
 
   // Fetch upcoming sessions for this group
   const now = new Date();
@@ -384,6 +419,34 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
                         );
                       })}
                     </div>
+
+                    {/* Exercise responses (collapsed) */}
+                    {(exercisesByParticipant[m.id] ?? []).length > 0 && (
+                      <details className="mt-3">
+                        <summary
+                          className="cursor-pointer text-xs font-medium select-none"
+                          style={{ color: "var(--color-ea-teal)" }}
+                        >
+                          Exercise answers ({(exercisesByParticipant[m.id] ?? []).length} response{(exercisesByParticipant[m.id] ?? []).length !== 1 ? "s" : ""})
+                        </summary>
+                        <div className="mt-2 space-y-2">
+                          {(exercisesByParticipant[m.id] ?? []).map((r, idx) => (
+                            <div
+                              key={idx}
+                              className="rounded-lg p-3"
+                              style={{ background: "var(--bg-hover)", border: "1px solid var(--border)" }}
+                            >
+                              <p className="text-[10px] font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+                                {moduleTitleById[r.moduleId] ?? r.moduleId} — <span className="font-mono">{r.questionKey}</span>
+                              </p>
+                              <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
+                                {r.response ?? <em style={{ color: "var(--text-muted)" }}>No answer</em>}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
                 );
               })}

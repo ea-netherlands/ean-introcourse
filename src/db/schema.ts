@@ -38,6 +38,10 @@ export const participants = pgTable(
     // Password (set during onboarding for participants, at signup for facilitators)
     passwordHash: text("password_hash"),
 
+    // Profile
+    bio: text("bio"),
+    avatarUrl: text("avatar_url"),
+
     // Timeslot availability e.g. ["early_monday","late_thursday"]
     availability: jsonb("availability").$type<string[]>(),
 

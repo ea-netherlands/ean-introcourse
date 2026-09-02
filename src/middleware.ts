@@ -1,16 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const ADMIN_COOKIE = "ean_admin_auth";
-// SHA-256 of "DoingGoodBetter" — pre-computed so this file stays Edge-compatible
-const PASSWORD_HASH = "11339b09b47b01e2d04df590cc10d25793001d0b07f4029283c14697e3f4896c";
 
-export function middleware(req: NextRequest) {
+async function sha256hex(value: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(value);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Protect all /admin/* routes except /admin/login itself
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const cookie = req.cookies.get(ADMIN_COOKIE)?.value;
-    if (cookie !== PASSWORD_HASH) {
+    const adminPw = process.env.ADMIN_PASSWORD;
+
+    if (!adminPw || !cookie) {
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const expectedHash = await sha256hex(adminPw);
+    if (cookie !== expectedHash) {
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = "/admin/login";
       loginUrl.searchParams.set("next", pathname);

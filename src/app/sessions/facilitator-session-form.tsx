@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface Group { id: string; name: string }
@@ -22,12 +22,30 @@ export function FacilitatorSessionForm({
   const [facilitatorId, setFacilitatorId] = useState(defaultFacilitatorId ?? "");
   const [scheduledAt, setScheduledAt] = useState("");
   const [meetLink, setMeetLink] = useState("");
-  const [agenda, setAgenda] = useState("");
+  const [agenda, setAgenda] = useState(""); // used when repeatWeeks === 1
   const [repeatWeeks, setRepeatWeeks] = useState(1);
+  // Per-session agendas used when repeatWeeks > 1
+  const [sessionAgendas, setSessionAgendas] = useState<string[]>([""]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<string[]>([]);
   const router = useRouter();
+
+  // Keep sessionAgendas array length in sync with repeatWeeks
+  useEffect(() => {
+    setSessionAgendas((prev) => {
+      const next = Array.from({ length: repeatWeeks }, (_, i) => prev[i] ?? "");
+      return next;
+    });
+  }, [repeatWeeks]);
+
+  function setSessionAgenda(index: number, value: string) {
+    setSessionAgendas((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +65,9 @@ export function FacilitatorSessionForm({
         const sessionTitle = repeatWeeks > 1
           ? `${title.trim()} (${i + 1}/${repeatWeeks})`
           : title.trim();
+        const sessionAgenda = repeatWeeks > 1
+          ? sessionAgendas[i]?.trim() || null
+          : agenda.trim() || null;
         const res = await fetch("/api/admin/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -56,7 +77,7 @@ export function FacilitatorSessionForm({
             facilitatorId: facilitatorId || null,
             scheduledAt: dates[i],
             meetLink: meetLink.trim() || null,
-            agenda: agenda.trim() || null,
+            agenda: sessionAgenda,
           }),
         });
         if (!res.ok) {
@@ -71,6 +92,7 @@ export function FacilitatorSessionForm({
       setScheduledAt("");
       setMeetLink("");
       setAgenda("");
+      setSessionAgendas([""]);
       setRepeatWeeks(1);
       router.refresh();
     } catch (err) {
@@ -79,6 +101,22 @@ export function FacilitatorSessionForm({
       setSaving(false);
     }
   }
+
+  // Compute preview dates for the per-session section
+  const previewDates: Date[] = [];
+  if (scheduledAt) {
+    const baseDt = new Date(scheduledAt);
+    for (let i = 0; i < repeatWeeks; i++) {
+      previewDates.push(new Date(baseDt.getTime() + i * 7 * 24 * 60 * 60 * 1000));
+    }
+  }
+
+  const dateLabel = (d?: Date) =>
+    d
+      ? d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) +
+        " " +
+        d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+      : "";
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -165,17 +203,56 @@ export function FacilitatorSessionForm({
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Agenda / notes (optional)</label>
-        <textarea
-          rows={3}
-          value={agenda}
-          onChange={(e) => setAgenda(e.target.value)}
-          placeholder="Discussion topics, prep reading, …"
-          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none resize-none"
-          style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-        />
-      </div>
+      {/* Single agenda when not repeating */}
+      {repeatWeeks === 1 && (
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Agenda / notes (optional)</label>
+          <textarea
+            rows={3}
+            value={agenda}
+            onChange={(e) => setAgenda(e.target.value)}
+            placeholder="Discussion topics, prep reading, …"
+            className="w-full rounded-xl px-3 py-2.5 text-sm outline-none resize-none"
+            style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+          />
+        </div>
+      )}
+
+      {/* Per-session agendas when repeating */}
+      {repeatWeeks > 1 && (
+        <div className="space-y-3">
+          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+            Session agendas / notes — each session can have its own description
+          </p>
+          {Array.from({ length: repeatWeeks }, (_, i) => (
+            <div key={i} className="rounded-xl p-3" style={{ border: "1px solid var(--border)", background: "var(--bg-page)" }}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm font-medium" style={{ color: "var(--color-ea-teal)" }}>
+                  Session {i + 1}/{repeatWeeks}
+                  {title && (
+                    <span className="ml-1 font-normal" style={{ color: "var(--text-muted)" }}>
+                      — {title.trim()} ({i + 1}/{repeatWeeks})
+                    </span>
+                  )}
+                </span>
+                {previewDates[i] && (
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    {dateLabel(previewDates[i])}
+                  </span>
+                )}
+              </div>
+              <textarea
+                rows={2}
+                value={sessionAgendas[i] ?? ""}
+                onChange={(e) => setSessionAgenda(i, e.target.value)}
+                placeholder={`Discussion topics, prep reading for session ${i + 1}…`}
+                className="w-full rounded-xl px-3 py-2 text-sm outline-none resize-none"
+                style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 

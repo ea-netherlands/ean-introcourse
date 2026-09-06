@@ -17,6 +17,8 @@ import {
 import { eq, inArray, and, gte } from "drizzle-orm";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WEEK_DEFS, getLessonById } from "@/lib/lessons";
+import { QUIZ_ANSWERS } from "@/lib/quiz-answers";
+import { parseQuizHtml, hasQuizHtml } from "@/lib/quiz-parser";
 
 export const dynamic = "force-dynamic";
 
@@ -110,10 +112,25 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
 
   // Build lesson title lookup from JSON files (no DB round-trip needed)
   const lessonTitleById: Record<string, string> = {};
+  // Build correct option text map: lessonId -> qIdx -> correct option text
+  // Used to show ✓/✗ next to participant quiz answers in the facilitator view.
+  const correctOptionText: Record<string, Record<number, string>> = {};
   for (const row of responseRows) {
     if (!lessonTitleById[row.lessonId]) {
       const lesson = getLessonById(row.lessonId);
-      if (lesson) lessonTitleById[row.lessonId] = lesson.title;
+      if (lesson) {
+        lessonTitleById[row.lessonId] = lesson.title;
+        // Parse quiz to get option texts if we have correct answer indices
+        if (QUIZ_ANSWERS[row.lessonId] && hasQuizHtml(lesson.html)) {
+          const questions = parseQuizHtml(lesson.html);
+          const answerMap: Record<number, string> = {};
+          QUIZ_ANSWERS[row.lessonId].forEach((correctOptIdx, qIdx) => {
+            const optText = questions[qIdx]?.options[correctOptIdx]?.text;
+            if (optText) answerMap[qIdx] = optText;
+          });
+          correctOptionText[row.lessonId] = answerMap;
+        }
+      }
     }
   }
 
@@ -445,16 +462,45 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
                                   {lessonTitleById[lid] ?? `Lesson ${lid}`}
                                 </p>
                                 <div className="space-y-2">
-                                  {rows.map((r, idx) => (
-                                    <div key={idx}>
-                                      <p className="text-[10px] font-mono mb-0.5" style={{ color: "var(--text-muted)" }}>
-                                        {r.questionKey}
-                                      </p>
-                                      <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
-                                        {r.response ?? <em style={{ color: "var(--text-muted)" }}>No answer</em>}
-                                      </p>
-                                    </div>
-                                  ))}
+                                  {rows.map((r, idx) => {
+                                    // Check correct/incorrect for MC quiz answers
+                                    const qNumMatch = r.questionKey.match(/^q(\d+)$/);
+                                    const qNum = qNumMatch ? parseInt(qNumMatch[1], 10) : null;
+                                    const correctText = qNum !== null
+                                      ? correctOptionText[lid]?.[qNum]
+                                      : undefined;
+                                    const isCorrect = correctText !== undefined && r.response === correctText;
+                                    const isWrong = correctText !== undefined && r.response !== correctText;
+
+                                    return (
+                                      <div key={idx}>
+                                        <div className="flex items-start gap-2">
+                                          {/* Correct/incorrect indicator */}
+                                          {correctText !== undefined ? (
+                                            <span
+                                              className="shrink-0 mt-0.5 text-xs font-bold"
+                                              style={{ color: isCorrect ? "#16a34a" : "#dc2626", minWidth: "16px" }}
+                                            >
+                                              {isCorrect ? "✓" : "✗"}
+                                            </span>
+                                          ) : (
+                                            <span className="shrink-0 mt-0.5 text-xs" style={{ color: "var(--text-muted)", minWidth: "16px" }}>·</span>
+                                          )}
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
+                                              {r.response ?? <em style={{ color: "var(--text-muted)" }}>No answer</em>}
+                                            </p>
+                                            {/* Show correct answer when wrong */}
+                                            {isWrong && correctText && (
+                                              <p className="text-[10px] mt-1" style={{ color: "#16a34a" }}>
+                                                Correct: {correctText}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             ))}

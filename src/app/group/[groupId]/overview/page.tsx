@@ -421,16 +421,16 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
                     </div>
 
                     {/* Exercise responses (collapsed) */}
-                    {(exercisesByParticipant[m.id] ?? []).length > 0 && (
+                    {(exercisesByParticipant[member.id] ?? []).length > 0 && (
                       <details className="mt-3">
                         <summary
                           className="cursor-pointer text-xs font-medium select-none"
                           style={{ color: "var(--color-ea-teal)" }}
                         >
-                          Exercise answers ({(exercisesByParticipant[m.id] ?? []).length} response{(exercisesByParticipant[m.id] ?? []).length !== 1 ? "s" : ""})
+                          Exercise answers ({(exercisesByParticipant[member.id] ?? []).length} response{(exercisesByParticipant[member.id] ?? []).length !== 1 ? "s" : ""})
                         </summary>
                         <div className="mt-2 space-y-2">
-                          {(exercisesByParticipant[m.id] ?? []).map((r, idx) => (
+                          {(exercisesByParticipant[member.id] ?? []).map((r, idx) => (
                             <div
                               key={idx}
                               className="rounded-lg p-3"

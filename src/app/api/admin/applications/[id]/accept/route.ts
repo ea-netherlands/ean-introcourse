@@ -46,14 +46,29 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
 
   await sendEmail({
     to: app.email,
-    subject: "You're accepted! Complete your EA Fellowship registration",
+    subject: "Congratulations! You've been accepted to the EA Netherlands Introductory Course",
     kind: "onboarding",
+    replyTo: "programmes@effectiefaltruisme.nl",
     html: `
-      <h2>Welcome, ${app.name}!</h2>
-      <p>Your application for the EA Netherlands Intro Fellowship has been accepted. 🎉</p>
-      <p>Please complete your registration by choosing your availability and setting a password:</p>
-      ${btn(onboardUrl, "Complete registration")}
-      <p style="color:#888;font-size:13px;">This link expires in ${TOKEN_DAYS} days.</p>
+      <p>Hi ${app.name},</p>
+      <p><strong>Congratulations!</strong> You've been accepted to join the Effective Altruism introductory course!</p>
+      <p>Please complete your registration to confirm your participation and set up your account:</p>
+      ${btn(onboardUrl, "Complete registration →")}
+      <p><strong>What you can expect:</strong></p>
+      <ul>
+        <li>We'll create groups of ~8 like-minded people and connect you with a facilitator and the 5-week course materials.</li>
+        <li>For each weekly session, the course contains 1–2 hours of reading materials.</li>
+        <li>Every week has a different theme! The facilitator will prepare and host the sessions with thought-provoking discussions.</li>
+        <li>If you join at least 4 out of 5 sessions, you'll receive an impact book for free (4 options to choose from)!</li>
+      </ul>
+      <p>We're excited to welcome you to our community and look forward to exploring important ideas together.</p>
+      <p>If you have any questions, reach us at
+         <a href="mailto:programmes@effectiefaltruisme.nl">programmes@effectiefaltruisme.nl</a>.</p>
+      <p>Warm regards,<br>
+         <strong>Effectief Altruïsme Nederland (EAN)</strong><br>
+         <a href="https://www.effectiefaltruisme.nl">www.effectiefaltruisme.nl</a>
+      </p>
+      <p style="color:#888;font-size:13px;">This registration link expires in ${TOKEN_DAYS} days.</p>
     `,
   });
 

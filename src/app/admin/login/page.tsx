@@ -8,6 +8,8 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const router = useRouter();
   const params = useSearchParams();
 
@@ -28,9 +30,19 @@ function LoginForm() {
     }
   }
 
+  async function handleForgot() {
+    setForgotLoading(true);
+    try {
+      await fetch("/api/admin/forgot-password", { method: "POST" });
+    } finally {
+      setForgotLoading(false);
+      setForgotSent(true);
+    }
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "#f8fafc" }}>
+      <div className="w-full max-w-sm rounded-2xl border border-slate-200 shadow-sm p-8" style={{ background: "#ffffff" }}>
         <div className="flex items-center gap-2 mb-8">
           <Image src="/ean-logo-mark.svg" alt="EAN" width={28} height={28} />
           <span className="font-serif text-slate-700">Admin access</span>
@@ -48,6 +60,7 @@ function LoginForm() {
               autoFocus
               required
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              style={{ color: "#0f172a", background: "#ffffff" }}
               placeholder="Admin password"
             />
           </div>
@@ -62,6 +75,22 @@ function LoginForm() {
             {loading ? "Checking…" : "Sign in"}
           </button>
         </form>
+
+        <div className="mt-4 text-center">
+          {forgotSent ? (
+            <p className="text-sm text-slate-500">
+              A notification has been sent to <span className="font-medium">programmes@effectiefaltruisme.nl</span>.
+            </p>
+          ) : (
+            <button
+              onClick={handleForgot}
+              disabled={forgotLoading}
+              className="text-sm text-teal-600 hover:underline disabled:opacity-50"
+            >
+              {forgotLoading ? "Sending…" : "Forgot password?"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

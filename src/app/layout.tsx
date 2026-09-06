@@ -35,17 +35,11 @@ export default function RootLayout({
           on <html> so the correct theme is applied on first paint (no flash).
           suppressHydrationWarning on <html> silences the data-theme mismatch.
         */}
-        <Script id="theme-init" strategy="beforeInteractive">{`
-          (function(){
-            try {
-              var t = localStorage.getItem('theme') || 'system';
-              var d = document.documentElement;
-              if (t === 'dark') { d.setAttribute('data-theme','dark'); }
-              else if (t === 'light') { d.setAttribute('data-theme','light'); }
-              else { d.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
-            } catch(e) {}
-          })();
-        `}</Script>
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme')||'system';var d=document.documentElement;if(t==='dark'){d.setAttribute('data-theme','dark');}else if(t==='light'){d.setAttribute('data-theme','light');}else{d.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}}catch(e){}})();` }}
+        />
 
         <ThemeProvider>{children}</ThemeProvider>
       </body>

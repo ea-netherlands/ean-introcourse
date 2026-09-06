@@ -12,11 +12,11 @@ import { getCurrentParticipant } from "@/lib/auth";
 import {
   db, ensureMigrated,
   groups, participants, lessonProgress, applications, fellowshipSessions,
-  exerciseResponses, modules,
+  lessonResponses,
 } from "@/db";
 import { eq, inArray, and, gte } from "drizzle-orm";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { WEEK_DEFS } from "@/lib/lessons";
+import { WEEK_DEFS, getLessonById } from "@/lib/lessons";
 
 export const dynamic = "force-dynamic";
 
@@ -92,38 +92,36 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
       : [];
   const appByEmail = Object.fromEntries(appRows.map((a) => [a.email, a]));
 
-  // Fetch exercise responses for all members
-  const exerciseRows =
+  // Fetch lesson responses (quiz + exercise answers) for all members
+  const responseRows =
     memberIds.length > 0
       ? await db
           .select({
-            participantId: exerciseResponses.participantId,
-            moduleId: exerciseResponses.moduleId,
-            questionKey: exerciseResponses.questionKey,
-            response: exerciseResponses.response,
-            submittedAt: exerciseResponses.submittedAt,
+            participantId: lessonResponses.participantId,
+            lessonId: lessonResponses.lessonId,
+            questionKey: lessonResponses.questionKey,
+            response: lessonResponses.response,
+            submittedAt: lessonResponses.submittedAt,
           })
-          .from(exerciseResponses)
-          .where(inArray(exerciseResponses.participantId, memberIds))
-          .orderBy(exerciseResponses.submittedAt)
+          .from(lessonResponses)
+          .where(inArray(lessonResponses.participantId, memberIds))
+          .orderBy(lessonResponses.submittedAt)
       : [];
 
-  // Fetch module titles for those responses
-  const moduleIds = [...new Set(exerciseRows.map((r) => r.moduleId))];
-  const moduleRows =
-    moduleIds.length > 0
-      ? await db
-          .select({ id: modules.id, title: modules.title })
-          .from(modules)
-          .where(inArray(modules.id, moduleIds))
-      : [];
-  const moduleTitleById = Object.fromEntries(moduleRows.map((m) => [m.id, m.title]));
+  // Build lesson title lookup from JSON files (no DB round-trip needed)
+  const lessonTitleById: Record<string, string> = {};
+  for (const row of responseRows) {
+    if (!lessonTitleById[row.lessonId]) {
+      const lesson = getLessonById(row.lessonId);
+      if (lesson) lessonTitleById[row.lessonId] = lesson.title;
+    }
+  }
 
-  // Group exercise responses by participant
-  const exercisesByParticipant: Record<string, typeof exerciseRows> = {};
-  for (const row of exerciseRows) {
-    if (!exercisesByParticipant[row.participantId]) exercisesByParticipant[row.participantId] = [];
-    exercisesByParticipant[row.participantId].push(row);
+  // Group responses by participant
+  const responsesByParticipant: Record<string, typeof responseRows> = {};
+  for (const row of responseRows) {
+    if (!responsesByParticipant[row.participantId]) responsesByParticipant[row.participantId] = [];
+    responsesByParticipant[row.participantId].push(row);
   }
 
   // Fetch upcoming sessions for this group
@@ -420,33 +418,50 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
                       })}
                     </div>
 
-                    {/* Exercise responses (collapsed) */}
-                    {(exercisesByParticipant[member.id] ?? []).length > 0 && (
-                      <details className="mt-3">
-                        <summary
-                          className="cursor-pointer text-xs font-medium select-none"
-                          style={{ color: "var(--color-ea-teal)" }}
-                        >
-                          Exercise answers ({(exercisesByParticipant[member.id] ?? []).length} response{(exercisesByParticipant[member.id] ?? []).length !== 1 ? "s" : ""})
-                        </summary>
-                        <div className="mt-2 space-y-2">
-                          {(exercisesByParticipant[member.id] ?? []).map((r, idx) => (
-                            <div
-                              key={idx}
-                              className="rounded-lg p-3"
-                              style={{ background: "var(--bg-hover)", border: "1px solid var(--border)" }}
-                            >
-                              <p className="text-[10px] font-medium mb-1" style={{ color: "var(--text-muted)" }}>
-                                {moduleTitleById[r.moduleId] ?? r.moduleId} — <span className="font-mono">{r.questionKey}</span>
-                              </p>
-                              <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
-                                {r.response ?? <em style={{ color: "var(--text-muted)" }}>No answer</em>}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
+                    {/* Quiz & exercise answers (collapsed) */}
+                    {(() => {
+                      const memberResponses = responsesByParticipant[member.id] ?? [];
+                      if (memberResponses.length === 0) return null;
+
+                      // Group by lessonId for a cleaner display
+                      const byLesson: Record<string, typeof memberResponses> = {};
+                      for (const r of memberResponses) {
+                        if (!byLesson[r.lessonId]) byLesson[r.lessonId] = [];
+                        byLesson[r.lessonId].push(r);
+                      }
+
+                      return (
+                        <details className="mt-3">
+                          <summary
+                            className="cursor-pointer text-xs font-medium select-none"
+                            style={{ color: "var(--color-ea-teal)" }}
+                          >
+                            Quiz & exercise answers ({memberResponses.length} response{memberResponses.length !== 1 ? "s" : ""})
+                          </summary>
+                          <div className="mt-2 space-y-3">
+                            {Object.entries(byLesson).map(([lid, rows]) => (
+                              <div key={lid} className="rounded-xl p-3" style={{ background: "var(--bg-hover)", border: "1px solid var(--border)" }}>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--text-muted)" }}>
+                                  {lessonTitleById[lid] ?? `Lesson ${lid}`}
+                                </p>
+                                <div className="space-y-2">
+                                  {rows.map((r, idx) => (
+                                    <div key={idx}>
+                                      <p className="text-[10px] font-mono mb-0.5" style={{ color: "var(--text-muted)" }}>
+                                        {r.questionKey}
+                                      </p>
+                                      <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
+                                        {r.response ?? <em style={{ color: "var(--text-muted)" }}>No answer</em>}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      );
+                    })()}
                   </div>
                 );
               })}

@@ -143,6 +143,31 @@ export const exerciseResponses = pgTable(
   ]
 );
 
+// ---------- lesson_responses ----------
+// Quiz and exercise answers keyed by Circle lessonId (e.g. "3644621").
+// Replaces the exercise_responses table which required a modules FK.
+
+export const lessonResponses = pgTable(
+  "lesson_responses",
+  {
+    id: text("id").primaryKey(),
+    participantId: text("participant_id")
+      .notNull()
+      .references(() => participants.id, { onDelete: "cascade" }),
+    lessonId: text("lesson_id").notNull(),     // Circle scraped lesson ID
+    questionKey: text("question_key").notNull(), // "q1", "q2", exercise section index, etc.
+    response: text("response"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("lr_participant_lesson_key_idx").on(t.participantId, t.lessonId, t.questionKey),
+    index("lr_participant_idx").on(t.participantId),
+    index("lr_lesson_idx").on(t.lessonId),
+  ]
+);
+
 // ---------- applications ----------
 // Stage 4: public sign-up applications for the fellowship.
 

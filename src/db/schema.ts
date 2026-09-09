@@ -30,8 +30,11 @@ export const participants = pgTable(
     email: text("email").notNull(),
     name: text("name").notNull(),
 
-    // "participant" = fellowship participant; "facilitator" = can access /admin
-    role: text("role", { enum: ["participant", "facilitator"] })
+    // "participant" = fellowship participant; "facilitator" = can access /admin.
+    // "admin" is read by the UI (see /sessions, /account, sidebar) but is not
+    // yet granted anywhere — no code path assigns it. Postgres stores this as
+    // plain text with no CHECK constraint, so this list is a TS narrowing only.
+    role: text("role", { enum: ["participant", "facilitator", "admin"] })
       .notNull()
       .default("participant"),
 

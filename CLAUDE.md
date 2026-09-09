@@ -7,7 +7,9 @@
 - **Email:** Resend (falls back to console logging when `RESEND_API_KEY` is absent)
 - **Styles:** Tailwind CSS v4 (no config file — configured via `postcss.config.mjs` and CSS)
 - **Fonts:** Self-hosted Atkinson Hyperlegible Next (body) + Sentient (headings)
-- **Content:** MDX files in `content/modules/` — parsed with gray-matter, rendered with next-mdx-remote
+- **Content:** scraped lesson JSON in `content/lessons/` (54 files); each lesson carries pre-rendered
+  `html` injected via `dangerouslySetInnerHTML` in `src/app/materials/[slug]/[lessonId]/page.tsx`.
+  There is no MDX pipeline — `content/modules/` does not exist in this repo.
 
 ## Key paths
 
@@ -15,13 +17,14 @@
 |---|---|
 | `src/db/schema.ts` | Drizzle schema for all tables |
 | `src/db/index.ts` | DB connection (PGlite/Postgres dual mode) |
-| `src/lib/modules.ts` | Reads MDX files from `content/modules/` |
+| `src/lib/lessons.ts` | Reads lesson JSON from `content/lessons/`; defines week ordering |
+| `src/lib/modules.ts` | Vestigial MDX/gray-matter reader; only its `ModuleFrontmatter` type is used |
 | `src/lib/email.ts` | `sendEmail()` wrapper (Resend + console fallback) |
 | `src/lib/auth.ts` | Session cookie helpers (Stage 2+) |
 | `src/app/materials/` | Reading materials pages |
 | `src/app/admin/` | Coordinator admin pages |
 | `src/app/api/cron/daily/route.ts` | Daily cron job (06:00 UTC) |
-| `content/modules/` | MDX content files |
+| `content/lessons/` | Scraped lesson JSON (one file per lesson id) |
 
 ## Database
 

@@ -127,7 +127,7 @@ export function NewSessionForm({
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
           <p className="text-xs text-slate-400 mt-1">
-            Tip: use a permanent Zoom or Teams link, or a Google Workspace Meet link (free Meet limits groups to 60 min).
+            Tip: use a permanent Zoom or Teams link, or a Google Workspace Meet link (sessions run 75 min; free Meet cuts groups off at 60 min).
           </p>
         </div>
         <div>

@@ -177,7 +177,7 @@ export function FacilitatorSessionForm({
             style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
           />
           <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-            Use Zoom/Teams for sessions over 60 min. Free Google Meet limits groups to 60 min.
+            Sessions run 75 min, so use Zoom or Teams. Free Google Meet cuts groups off at 60 min.
           </p>
         </div>
         <div>

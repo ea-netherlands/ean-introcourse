@@ -24,6 +24,9 @@ function outlookFmt(d: Date) {
   return d.toISOString().replace(".000Z", "");
 }
 
+/** Fellowship discussion sessions run 1 hour 15 minutes. */
+export const SESSION_DURATION_MINUTES = 75;
+
 export interface CalendarEvent {
   title: string;
   startAt: Date;
@@ -33,7 +36,7 @@ export interface CalendarEvent {
 }
 
 export function googleCalendarUrl(event: CalendarEvent): string {
-  const end = new Date(event.startAt.getTime() + (event.durationMinutes ?? 60) * 60_000);
+  const end = new Date(event.startAt.getTime() + (event.durationMinutes ?? SESSION_DURATION_MINUTES) * 60_000);
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: event.title,
@@ -45,7 +48,7 @@ export function googleCalendarUrl(event: CalendarEvent): string {
 }
 
 export function outlookCalendarUrl(event: CalendarEvent): string {
-  const end = new Date(event.startAt.getTime() + (event.durationMinutes ?? 60) * 60_000);
+  const end = new Date(event.startAt.getTime() + (event.durationMinutes ?? SESSION_DURATION_MINUTES) * 60_000);
   const params = new URLSearchParams({
     path: "/calendar/action/compose",
     rru: "addevent",
@@ -59,7 +62,7 @@ export function outlookCalendarUrl(event: CalendarEvent): string {
 }
 
 export function buildIcsContent(event: CalendarEvent, uid: string): string {
-  const end = new Date(event.startAt.getTime() + (event.durationMinutes ?? 60) * 60_000);
+  const end = new Date(event.startAt.getTime() + (event.durationMinutes ?? SESSION_DURATION_MINUTES) * 60_000);
   const now = new Date();
   const lines = [
     "BEGIN:VCALENDAR",

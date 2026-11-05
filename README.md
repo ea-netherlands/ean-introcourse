@@ -131,7 +131,7 @@ Facilitators see an extended navigation on all pages:
 - Schedule new sessions with title, date/time, meeting link, and optional agenda
 - **Repeat slider** — create up to 5 sessions spaced exactly 1 week apart in one click
 - Lists upcoming and past sessions for the facilitator's group
-- Meeting link hint: use Zoom/Teams for sessions over 60 minutes (Google Meet free tier caps groups at 60 min)
+- Meeting link hint: sessions run 75 minutes, so use Zoom/Teams (Google Meet free tier caps groups at 60 min)
 
 ### Group overview page
 - **URL:** `/group/[groupId]/overview`

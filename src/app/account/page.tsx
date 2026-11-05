@@ -19,7 +19,7 @@ import {
 import { and, eq, gte, or, isNull } from "drizzle-orm";
 import { getAllWeeksWithLessons } from "@/lib/lessons";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { googleCalendarUrl, outlookCalendarUrl } from "@/lib/calendar";
+import { googleCalendarUrl, outlookCalendarUrl, SESSION_DURATION_MINUTES } from "@/lib/calendar";
 import { ProfileEditForm } from "./profile-edit-form";
 
 export const dynamic = "force-dynamic";
@@ -247,7 +247,7 @@ export default async function AccountPage() {
                 const calEvent = {
                   title: s.title,
                   startAt: s.scheduledAt,
-                  durationMinutes: 60,
+                  durationMinutes: SESSION_DURATION_MINUTES,
                   location: s.meetLink ?? null,
                 };
                 const googleUrl = googleCalendarUrl(calEvent);

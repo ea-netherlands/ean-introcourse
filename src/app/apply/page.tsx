@@ -215,7 +215,7 @@ export default function ApplyPage() {
             Sign up for the Intro Fellowship
           </h1>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            5 weeks · weekly 1-hour online group sessions · free
+            5 weeks · weekly 75-minute online discussions · about 3.5 hours of prep a week · free
           </p>
         </div>
 

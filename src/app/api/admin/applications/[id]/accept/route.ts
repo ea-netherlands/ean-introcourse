@@ -57,7 +57,7 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
       <p><strong>What you can expect:</strong></p>
       <ul>
         <li>We'll create groups of ~8 like-minded people and connect you with a facilitator and the 5-week course materials.</li>
-        <li>For each weekly session, the course contains 1–2 hours of reading materials.</li>
+        <li>Each weekly session is a 75-minute online discussion. Expect about 3.5 hours of reading and preparation beforehand.</li>
         <li>Every week has a different theme! The facilitator will prepare and host the sessions with thought-provoking discussions.</li>
         <li>If you join at least 4 out of 5 sessions, you'll receive an impact book for free (4 options to choose from)!</li>
       </ul>

@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, ensureMigrated, fellowshipSessions } from "@/db";
-import { buildIcsContent } from "@/lib/calendar";
+import { buildIcsContent, SESSION_DURATION_MINUTES } from "@/lib/calendar";
 
 interface Context { params: Promise<{ id: string }> }
 
@@ -26,7 +26,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
     {
       title: session.title,
       startAt: session.scheduledAt,
-      durationMinutes: 60,
+      durationMinutes: SESSION_DURATION_MINUTES,
       location: session.meetLink ?? undefined,
       description: session.agenda ?? undefined,
     },

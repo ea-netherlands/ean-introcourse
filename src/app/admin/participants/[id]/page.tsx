@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui";
 import { SendLinkButton } from "./send-link-button";
 import { GroupAssign } from "./group-assign";
 import { StatusChange } from "./status-change";
+import { DeleteParticipantButton } from "./delete-button";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,15 @@ export default async function ParticipantDetailPage({ params }: Props) {
     .limit(1);
 
   if (!participant) notFound();
+
+  // Prev / next navigation — same order as the participants list (createdAt asc)
+  const allIds = await db
+    .select({ id: participants.id })
+    .from(participants)
+    .orderBy(participants.createdAt);
+  const idx = allIds.findIndex((r) => r.id === id);
+  const prevId = idx > 0 ? allIds[idx - 1].id : null;
+  const nextId = idx < allIds.length - 1 ? allIds[idx + 1].id : null;
 
   // All groups (for assignment dropdown)
   const allGroups = await db
@@ -71,13 +81,46 @@ export default async function ParticipantDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-2xl">
-      {/* Back link */}
-      <Link
-        href="/admin/participants"
-        className="text-sm text-slate-400 hover:text-teal-600 transition mb-6 inline-block"
-      >
-        ← Participants
-      </Link>
+      {/* Back link + prev/next navigation */}
+      <div className="flex items-center justify-between mb-6">
+        <Link
+          href="/admin/participants"
+          className="text-sm text-slate-400 hover:text-teal-600 transition"
+        >
+          ← Participants
+        </Link>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-slate-400 mr-1">
+            {idx + 1} / {allIds.length}
+          </span>
+          {prevId ? (
+            <Link
+              href={`/admin/participants/${prevId}`}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-500 hover:bg-slate-50 hover:text-teal-600 transition"
+              title="Previous participant"
+            >
+              ← Prev
+            </Link>
+          ) : (
+            <span className="px-3 py-1.5 rounded-lg border border-slate-100 text-sm text-slate-300 cursor-not-allowed">
+              ← Prev
+            </span>
+          )}
+          {nextId ? (
+            <Link
+              href={`/admin/participants/${nextId}`}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-500 hover:bg-slate-50 hover:text-teal-600 transition"
+              title="Next participant"
+            >
+              Next →
+            </Link>
+          ) : (
+            <span className="px-3 py-1.5 rounded-lg border border-slate-100 text-sm text-slate-300 cursor-not-allowed">
+              Next →
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Header card */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
@@ -159,8 +202,9 @@ export default async function ParticipantDetailPage({ params }: Props) {
         />
 
         {/* Actions */}
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex items-center justify-between gap-3">
           <SendLinkButton participantId={participant.id} email={participant.email} />
+          <DeleteParticipantButton participantId={participant.id} name={participant.name} />
         </div>
       </div>
 

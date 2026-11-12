@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { consumeLoginToken, createSession } from "@/lib/auth";
 import { appUrl } from "@/lib/url";
+import { eq } from "drizzle-orm";
+import { db, participants } from "@/db";
 
 const SESSION_COOKIE = "ean_fellowship_session";
 const SESSION_DAYS = 7;
@@ -26,6 +28,16 @@ export async function GET(req: NextRequest) {
 
   if (!participantId) {
     return NextResponse.redirect(appUrl("/auth/login?error=invalid"));
+  }
+
+  // Accounts still pending approval/onboarding may not sign in.
+  const [participant] = await db
+    .select({ status: participants.status })
+    .from(participants)
+    .where(eq(participants.id, participantId))
+    .limit(1);
+  if (!participant || participant.status === "pending") {
+    return NextResponse.redirect(appUrl("/auth/login?error=pending"));
   }
 
   const sessionToken = await createSession(participantId);

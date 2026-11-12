@@ -17,6 +17,10 @@ export const groups = pgTable("groups", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   cohort: text("cohort"), // e.g. "Cohort 2025-Q3"
+  // Which weekly timeslot this group meets at (one of the 4 from the application form)
+  timing: text("timing"), // "monday_1730" | "monday_1930" | "thursday_1730" | "thursday_1930"
+  // When active=false the group is archived: participants become graduates, no new sessions
+  active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -191,6 +195,7 @@ export const applications = pgTable("applications", {
   careerStage: text("career_stage"),
   occupation: text("occupation"),
   workArea: text("work_area"),
+  studyField: text("study_field"), // students answer this instead of occupation/workArea
   // Schedule preferences (Q9, Q10)
   availability: jsonb("availability"),                   // array of selected timeslot strings
   onlinePreference: text("online_preference"),           // "online"|"in_person"|"no_preference"

@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, participants, ensureMigrated } from "@/db";
 import { createLoginToken } from "@/lib/auth";
-import { sendEmail, btn } from "@/lib/email";
+import { sendEmail, btn, escapeHtml } from "@/lib/email";
 import { appUrl } from "@/lib/url";
 
 export async function POST(req: NextRequest) {
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       to: participant.email,
       subject: "Your EA Fellowship sign-in link",
       html: `
-        <p>Hi ${participant.name},</p>
+        <p>Hi ${escapeHtml(participant.name)},</p>
         <p>A facilitator has sent you a sign-in link for the EA Fellowship platform.
            Click the button below to access your materials. The link expires in 30&nbsp;minutes
            and can only be used once.</p>

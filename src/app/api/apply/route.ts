@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, applications, participants, ensureMigrated } from "@/db";
 import { eq } from "drizzle-orm";
 import { newId } from "@/lib/ids";
+import { sendEmail, btn, escapeHtml } from "@/lib/email";
+import { appUrl } from "@/lib/url";
+
+const CONTACT_EMAIL = "programmes@effectiefaltruisme.nl";
 
 export async function POST(req: NextRequest) {
   await ensureMigrated();
@@ -25,6 +29,7 @@ export async function POST(req: NextRequest) {
   const careerStage = typeof body.careerStage === "string" ? body.careerStage.trim() || null : null;
   const occupation = typeof body.occupation === "string" ? body.occupation.trim() || null : null;
   const workArea = typeof body.workArea === "string" ? body.workArea.trim() || null : null;
+  const studyField = typeof body.studyField === "string" ? body.studyField.trim() || null : null;
   const language = typeof body.language === "string" ? body.language || null : null;
   const availability = Array.isArray(body.availability) ? body.availability : null;
   const onlinePreference = typeof body.onlinePreference === "string" ? body.onlinePreference || null : null;
@@ -61,6 +66,7 @@ export async function POST(req: NextRequest) {
     careerStage,
     occupation,
     workArea,
+    studyField,
     language,
     availability,
     onlinePreference,
@@ -68,6 +74,39 @@ export async function POST(req: NextRequest) {
     privacyConsent,
     status: "pending",
   });
+
+  // Confirmation to the applicant (+ heads-up to the coordinator). Email
+  // problems must never make a stored application look like it failed.
+  try {
+    await sendEmail({
+      to: email,
+      subject: "We received your application for the EA Netherlands Intro Fellowship",
+      kind: "application_received",
+      replyTo: CONTACT_EMAIL,
+      html: `
+        <p>Hi ${escapeHtml(name)},</p>
+        <p>Thanks for applying to the EA Netherlands Intro Fellowship! We've received your application.</p>
+        <p>We review applications before each cohort starts and will email you whether you've been placed in a group.
+           The fellowship runs for 5 weeks, with a weekly 75-minute online discussion and about 3.5 hours of preparation per week.</p>
+        <p>Questions? Reach us at <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>
+        <p>Warm regards,<br><strong>Effectief Altruïsme Nederland (EAN)</strong></p>
+      `,
+    });
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail) {
+      await sendEmail({
+        to: adminEmail,
+        subject: `New fellowship application: ${name}`,
+        kind: "application_admin_notice",
+        html: `
+          <p>${escapeHtml(name)} (${escapeHtml(email)}) just applied.</p>
+          ${btn(appUrl("/admin/applications"), "Review applications →")}
+        `,
+      });
+    }
+  } catch (err) {
+    console.error("[apply] confirmation email failed:", err);
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

@@ -71,6 +71,16 @@ ${inner}
 </body></html>`;
 }
 
+/** Escape user-supplied text (names etc.) before putting it into email HTML. */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function btn(href: string, label: string): string {
   return `<a href="${href}" style="display:inline-block;background:#16879c;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;margin:4px 4px 4px 0;">${label}</a>`;
 }

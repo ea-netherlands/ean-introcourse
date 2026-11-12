@@ -5,6 +5,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "EA Netherlands — Fellowship",
+  // Course platform for enrolled participants: keep it out of search engines.
+  robots: { index: false, follow: false },
   description:
     "Reading materials and exercises for the EA Netherlands Intro Fellowship",
 };

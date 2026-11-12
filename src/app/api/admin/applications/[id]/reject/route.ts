@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, ensureMigrated, applications } from "@/db";
 import { eq } from "drizzle-orm";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, escapeHtml } from "@/lib/email";
 
 interface Ctx { params: Promise<{ id: string }> }
 
@@ -27,7 +27,7 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
     kind: "rejection",
     replyTo: "programmes@effectiefaltruisme.nl",
     html: `
-      <p>Dear ${app.name},</p>
+      <p>Dear ${escapeHtml(app.name)},</p>
       <p>Thank you for your interest in the Effective Altruism Netherlands Introductory Course.
          We appreciate the time you took to sign up and your enthusiasm for learning more about effective altruism.</p>
       <p>After careful consideration of all applications, we regret to inform you that we are unable to offer

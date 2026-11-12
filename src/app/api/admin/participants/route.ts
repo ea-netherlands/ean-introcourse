@@ -14,11 +14,13 @@ export async function POST(req: NextRequest) {
       name?: string;
       email?: string;
       role?: string;
+      status?: string;
     };
 
     const name = body.name?.trim();
     const email = body.email?.toLowerCase().trim();
     const role = body.role === "facilitator" ? "facilitator" : "participant";
+    const status = body.status === "active" ? "active" : "pending";
 
     if (!name || !email) {
       return NextResponse.json({ error: "Name and email are required." }, { status: 400 });
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
       name,
       email,
       role,
-      status: "pending",
+      status,
     });
 
     return NextResponse.json({ id });

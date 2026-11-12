@@ -7,7 +7,7 @@
 
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { getCurrentParticipant } from "@/lib/auth";
+import { getCurrentParticipant, canAccessGroup } from "@/lib/auth";
 import { db, ensureMigrated, groups, participants, groupPosts, groupPostReplies } from "@/db";
 import { eq, desc, inArray } from "drizzle-orm";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -32,7 +32,7 @@ export default async function GroupPage({ params }: Props) {
   if (!group) notFound();
 
   // Access check: must be in this group OR a facilitator
-  if (me.role !== "facilitator" && me.groupId !== groupId) {
+  if (!canAccessGroup(me, groupId)) {
     redirect("/materials");
   }
 

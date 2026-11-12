@@ -8,7 +8,7 @@
 
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { getCurrentParticipant } from "@/lib/auth";
+import { getCurrentParticipant, canAccessGroup } from "@/lib/auth";
 import {
   db, ensureMigrated,
   groups, participants, lessonProgress, applications, fellowshipSessions,
@@ -42,6 +42,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
   const me = await getCurrentParticipant().catch(() => null);
   if (!me) redirect(`/auth/login?next=/group/${groupId}/overview`);
   if (me.role !== "facilitator" && me.role !== "admin") redirect("/materials");
+  if (!canAccessGroup(me, groupId)) redirect("/materials");
 
   // Fetch group
   const [group] = await db.select().from(groups).where(eq(groups.id, groupId));
@@ -478,13 +479,14 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
                                           {/* Correct/incorrect indicator */}
                                           {correctText !== undefined ? (
                                             <span
-                                              className="shrink-0 mt-0.5 text-xs font-bold"
-                                              style={{ color: isCorrect ? "#16a34a" : "#dc2626", minWidth: "16px" }}
+                                              className="shrink-0 mt-0.5 leading-none"
+                                              style={{ fontSize: "14px", minWidth: "18px" }}
+                                              title={isCorrect ? "Correct" : "Incorrect"}
                                             >
-                                              {isCorrect ? "✓" : "✗"}
+                                              {isCorrect ? "✅" : "❌"}
                                             </span>
                                           ) : (
-                                            <span className="shrink-0 mt-0.5 text-xs" style={{ color: "var(--text-muted)", minWidth: "16px" }}>·</span>
+                                            <span className="shrink-0 mt-0.5 text-xs" style={{ color: "var(--text-muted)", minWidth: "18px" }}>·</span>
                                           )}
                                           <div className="flex-1 min-w-0">
                                             <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>

@@ -3,13 +3,15 @@ import { db, ensureMigrated, onboardingTokens, participants } from "@/db";
 import { eq } from "drizzle-orm";
 import { createHash } from "crypto";
 import bcryptjs from "bcryptjs";
+import { GROUP_TIMESLOTS, normalizeAvailability } from "@/lib/availability";
 
 export async function POST(req: NextRequest) {
   await ensureMigrated();
   const body = await req.json().catch(() => ({}));
   const raw: string = body.token ?? "";
   const password: string = body.password ?? "";
-  const availability: string[] = Array.isArray(body.availability) ? body.availability : [];
+  const allowed = new Set<string>(GROUP_TIMESLOTS.map((t) => t.value));
+  const availability = normalizeAvailability(body.availability).filter((s) => allowed.has(s));
 
   if (!raw || !password || availability.length === 0) {
     return NextResponse.json({ error: "Missing fields." }, { status: 400 });

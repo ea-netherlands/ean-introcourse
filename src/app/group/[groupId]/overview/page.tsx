@@ -8,7 +8,7 @@
 
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { getCurrentParticipant } from "@/lib/auth";
+import { getCurrentParticipant, canAccessGroup } from "@/lib/auth";
 import {
   db, ensureMigrated,
   groups, participants, lessonProgress, applications, fellowshipSessions,
@@ -42,6 +42,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
   const me = await getCurrentParticipant().catch(() => null);
   if (!me) redirect(`/auth/login?next=/group/${groupId}/overview`);
   if (me.role !== "facilitator" && me.role !== "admin") redirect("/materials");
+  if (!canAccessGroup(me, groupId)) redirect("/materials");
 
   // Fetch group
   const [group] = await db.select().from(groups).where(eq(groups.id, groupId));

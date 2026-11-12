@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentParticipant } from "@/lib/auth";
+import { getCurrentParticipant, canAccessGroup } from "@/lib/auth";
 import { db, ensureMigrated, groupPosts, participants } from "@/db";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
@@ -11,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   const { groupId } = await params;
   const me = await getCurrentParticipant().catch(() => null);
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (me.role !== "facilitator" && me.groupId !== groupId)
+  if (!canAccessGroup(me, groupId))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const posts = await db
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const { groupId } = await params;
   const me = await getCurrentParticipant().catch(() => null);
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (me.role !== "facilitator" && me.groupId !== groupId)
+  if (!canAccessGroup(me, groupId))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));

@@ -79,7 +79,8 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 - Migrations are **hand-written** SQL in `drizzle/NNNN_*.sql` (`drizzle-kit generate` needs a TTY).
   Separate statements with `--> statement-breakpoint`; prefer `ADD COLUMN IF NOT EXISTS`.
   Every file **must** also be added by hand to `drizzle/meta/_journal.json` or it is silently skipped.
-- Existing: 0000–0007 (`0007_lesson_responses`). Production build runs `db:migrate` first.
+- Existing: 0000–0009 (`0008_group_timing`, `0009_application_study_field`). Ignore the stray
+  `0000_new_the_fallen.sql` (not in the journal). Production build runs `db:migrate` first.
 - `ensureMigrated()` caches per process → **restart the dev server after adding a migration**.
 - PGlite allows **one process**: stop the dev server before `npm run db:migrate`.
 - Tables: `participants` (role participant/facilitator/admin, status pending/active/completed,
@@ -94,8 +95,13 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 - Participants/facilitators: magic link (`/auth/login` → `/api/auth/send-link`; never reveals
   whether an email exists; tokens SHA-256 hashed, 30 min, single use) or password
   (`/api/auth/password-login`). Cookie `ean_fellowship_session`, 7 days.
+- Accounts with status `pending` cannot sign in by either method (send-link silently skips them,
+  `/auth/verify` re-checks). Magic links are rate-limited to 3 per address per 15 min (counted in
+  `email_log`).
 - Facilitators sign up at `/facilitator/signup` (status pending) and need admin approval
-  (status → active) before they can log in.
+  (status → active) before they can log in. Admins can also add them at `/admin/facilitators`.
+- Group pages/APIs use `canAccessGroup()` (`src/lib/auth.ts`): you only see the group in your own
+  `participants.groupId`; role `admin` sees all. Facilitators are assigned to a group the same way.
 - Admin: one shared password from `ADMIN_PASSWORD`; cookie `ean_admin_auth` = SHA-256 of it.
   `src/middleware.ts` (Edge runtime — use Web Crypto, not `node:crypto`) protects `/admin/*`
   and `/api/admin/*` (401 JSON), except `/api/admin/auth` and `/api/admin/forgot-password`.
@@ -104,20 +110,36 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 
 ## Features
 
-- **Applicant:** `/apply` 4-step form based on the Typeform ("Other" is a plain option — no
-  free-text field yet; no separate student branch yet). Accepted applicants get a 7-day
-  `/onboard?token=` link to pick availability and set a password.
+- **Applicant:** `/apply` 4-step form based on the Typeform; "Other" options open a free-text
+  field (stored as "Other: …"); students answer field of study (`applications.study_field`)
+  instead of occupation/work area. Accepted applicants get a 7-day `/onboard?token=` link to
+  confirm availability and set a password; finished participants are sent to `/graduated`.
 - **Participant:** `/materials/[slug]/[lessonId]` with progress bar, quizzes (locked after submit,
   score + explanations) and exercises; answers saved via `/api/exercises/submit` →
   `lesson_responses`. `/account` (profile, upcoming sessions + calendar links), `/chat`
   (General + My group), `/group/[groupId]`.
-- **Facilitator:** `/sessions` plan sessions (repeat 1–8 weeks, per-session descriptions);
-  `/group/[groupId]/overview` student progress + quiz/exercise answers.
-- **Admin:** `/admin` dashboard, applications (bulk accept/reject), participants (+ CSV export),
-  groups, form-groups, facilitators, sessions (+ attendance).
-- **Emails:** acceptance, rejection (from the owner's "process & templates" docx), magic link
-  (self-requested and admin-sent), admin forgot-password. No "application received" email and
-  no session reminders yet.
+- **Facilitator:** `/sessions` plan sessions (repeat 1–8 weeks, per-session descriptions,
+  optional auto-created Google Meet); `/group/[groupId]/overview` student progress + answers.
+- **Admin:** `/admin` dashboard, applications (bulk accept/reject, delete), participants
+  (table with bulk select/delete, prev/next on detail, CSV export), groups (timing,
+  activate/deactivate — deactivating marks members completed — delete when empty), full-page
+  form-groups matcher, facilitators (approve, add directly), sessions (+ attendance, facilitator shown).
+- **Emails** (`src/lib/email.ts`; always `escapeHtml()` user text): application received (+ notice
+  to `ADMIN_EMAIL`), acceptance, rejection (from the owner's "process & templates" docx), magic
+  link (self-requested and admin-sent), admin forgot-password, and 24h session reminders from
+  `cron/daily` (one per attendee, tracked in `session_attendance.invite_sent_at`; needs
+  `CRON_SECRET` in production).
+- **Google Meet:** `src/lib/google-calendar.ts` (pure `crypto` + fetch — NOT `google-auth-library`,
+  which breaks Turbopack). It signs a JWT with `sub` = `GOOGLE_CALENDAR_ID`, which requires
+  **domain-wide delegation** for the service account in Google Workspace; without
+  `GOOGLE_*` env vars the toggle is disabled and a link is pasted manually.
+
+## Availability / time slots
+
+One vocabulary everywhere: `src/lib/availability.ts` (`monday_1730`, `monday_1930`,
+`thursday_1730`, `thursday_1930`, plus `other` on the apply form). Used by `/apply`, `/onboard`,
+`groups.timing`, Form Groups matching and all admin labels. Legacy values (`early_monday`…,
+`monday_early`…) are translated by `normalizeSlot()` — don't add new vocabularies.
 
 ## Gotchas
 
@@ -134,30 +156,16 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 
 ## Open work (as of 2026-11-12)
 
-1. **Work from 2026-09-07/09 never reached GitHub** and was lost with the old laptop (unless a
-   backup has `C:\intro-course-website`): `/graduated` page + redirect, Google Meet auto-creation
-   (`src/lib/google-calendar.ts`, pure `crypto`, NOT `google-auth-library` which breaks Turbopack),
-   group timing/active toggle (migration 0008), admin "add facilitator" form, prev/next on
-   participant pages, delete for participants/applications/groups, the full-page form-groups
-   layout, `src/lib/availability.ts` + fixed `SLOT_LABELS`, accept route copying `availability`,
-   `/api/dev/seed`, apply-form "Other" free-text fields and the student branch (study field
-   instead of occupation/work area). The chat exports outside the repo describe each change.
-1b. Access-control gaps (verified 2026-11-12): magic-link login (`consumeLoginToken` +
-   `/api/auth/send-link`) ignores `status`, so pending facilitators and accepted-but-not-onboarded
-   applicants can log in by magic link (password login does block them). Facilitators can open
-   any group's `/group/[groupId]/overview` and chat, not only their own.
-2. Two incompatible availability vocabularies: apply form (`monday_1930`…) vs onboarding
-   (`early_monday`…), so group matching never lines up. Needs a decision.
-3. Go-live hardening: rate-limit magic-link sending, privacy policy page (GDPR; apply links to
-   effectiefaltruisme.nl/privacy), noindex/robots, Resend domain verification for the From
-   address, application-received email, session reminder cron (`cron/daily` is only TODOs),
-   escape names in email HTML, `npm audit` (critical advisory on `next` → upgrade to 16.4.x).
-3b. Smaller gaps: no participant forgot-password; groups can only be created (no edit/timing/
-   deactivate/delete); only sessions can be deleted; avatar is a URL, no upload; saved quiz
-   answers aren't reloaded on revisit; `/api/materials/complete` is a stub; unused
-   `exercise-form.tsx`/`lesson-exercise-form.tsx`; apply success screen shows fellowship@ instead
-   of programmes@.
-4. Google login: researched (Auth.js), not built; recommendation was to keep magic links.
+1. Production setup the owner must do: `CRON_SECRET` in Vercel (reminders), Resend domain
+   verification for the From address, optional `GOOGLE_*` vars + domain-wide delegation,
+   a new `ADMIN_PASSWORD`.
+2. No dedicated privacy page (apply links to effectiefaltruisme.nl/privacy).
+3. Smaller gaps: no participant forgot-password; avatar is a URL, no upload; saved quiz answers
+   aren't reloaded on revisit; `/api/materials/complete` is a stub; unused
+   `exercise-form.tsx`/`lesson-exercise-form.tsx`; facilitators have no availability of their own;
+   lesson pages are readable without logging in.
+4. `quiz-answers.ts` was AI-inferred — owner should verify it.
+5. Google login: researched (Auth.js), not built; recommendation was to keep magic links.
 
 Full chat exports from the original build live outside the repo
 (`C:\intro-course-website\chatgeschiedenis\`); search them for the reasoning behind a decision.

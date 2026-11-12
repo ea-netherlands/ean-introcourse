@@ -110,6 +110,17 @@ export const getCurrentParticipant = cache(
   }
 );
 
+/**
+ * Group-level access: participants and facilitators only see the group they
+ * are assigned to (participants.groupId); the "admin" role sees every group.
+ */
+export function canAccessGroup(
+  me: Pick<CurrentParticipant, "role" | "groupId">,
+  groupId: string
+): boolean {
+  return me.role === "admin" || me.groupId === groupId;
+}
+
 /** Set the session cookie after a successful magic-link sign-in. */
 export async function setSessionCookie(raw: string): Promise<void> {
   const jar = await cookies();

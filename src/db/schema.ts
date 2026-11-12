@@ -195,6 +195,7 @@ export const applications = pgTable("applications", {
   careerStage: text("career_stage"),
   occupation: text("occupation"),
   workArea: text("work_area"),
+  studyField: text("study_field"), // students answer this instead of occupation/workArea
   // Schedule preferences (Q9, Q10)
   availability: jsonb("availability"),                   // array of selected timeslot strings
   onlinePreference: text("online_preference"),           // "online"|"in_person"|"no_preference"

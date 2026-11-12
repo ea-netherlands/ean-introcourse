@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
+import { formatGroupTiming } from "@/lib/availability";
 
 interface Group {
   id: string;
@@ -12,12 +13,6 @@ interface Group {
   createdAt: string;
 }
 
-const TIMESLOT_LABELS: Record<string, string> = {
-  monday_1730: "Mon 17:30",
-  monday_1930: "Mon 19:30",
-  thursday_1730: "Thu 17:30",
-  thursday_1930: "Thu 19:30",
-};
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -195,7 +190,7 @@ export default function GroupsPage() {
                     {g.cohort && <div className="text-xs text-slate-400">{g.cohort}</div>}
                     {g.timing && (
                       <div className="text-xs text-slate-400 mt-0.5">
-                        🕐 {TIMESLOT_LABELS[g.timing] ?? g.timing}
+                        🕐 {formatGroupTiming(g.timing, { short: true })}
                       </div>
                     )}
                     <div className="text-sm text-slate-500 mt-2 mb-3">

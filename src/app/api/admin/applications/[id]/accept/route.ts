@@ -3,7 +3,7 @@ import { db, ensureMigrated, applications, participants, onboardingTokens } from
 import { eq } from "drizzle-orm";
 import { newId } from "@/lib/ids";
 import { randomBytes, createHash } from "crypto";
-import { sendEmail, btn } from "@/lib/email";
+import { sendEmail, btn, escapeHtml } from "@/lib/email";
 import { appUrl } from "@/lib/url";
 
 const TOKEN_DAYS = 7;
@@ -54,7 +54,7 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
     kind: "onboarding",
     replyTo: "programmes@effectiefaltruisme.nl",
     html: `
-      <p>Hi ${app.name},</p>
+      <p>Hi ${escapeHtml(app.name)},</p>
       <p><strong>Congratulations!</strong> You've been accepted to join the Effective Altruism introductory course!</p>
       <p>Please complete your registration to confirm your participation and set up your account:</p>
       ${btn(onboardUrl, "Complete registration →")}

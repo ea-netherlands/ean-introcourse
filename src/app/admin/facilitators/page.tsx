@@ -2,6 +2,7 @@ import { db, participants, ensureMigrated } from "@/db";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { AddFacilitatorForm } from "./add-facilitator-form";
+import { formatAvailabilitySlot, normalizeAvailability } from "@/lib/availability";
 
 export const dynamic = "force-dynamic";
 
@@ -25,20 +26,14 @@ export default async function FacilitatorsPage() {
   const active = facilitators.filter((f) => f.status === "active");
   const completed = facilitators.filter((f) => f.status === "completed");
 
-  const SLOT_LABELS: Record<string, string> = {
-    early_monday: "Mon early",
-    late_monday: "Mon late",
-    early_thursday: "Thu early",
-    late_thursday: "Thu late",
-  };
-
-  function SlotPills({ slots }: { slots: string[] }) {
+  function SlotPills({ slots: raw }: { slots: string[] }) {
+    const slots = normalizeAvailability(raw);
     if (!slots.length) return <span className="text-xs text-slate-400">Not set</span>;
     return (
       <div className="flex flex-wrap gap-1">
         {slots.map((s) => (
           <span key={s} className="px-2 py-0.5 rounded-full text-[11px] bg-teal-50 text-teal-700 border border-teal-200">
-            {SLOT_LABELS[s] ?? s}
+            {formatAvailabilitySlot(s, { short: true })}
           </span>
         ))}
       </div>

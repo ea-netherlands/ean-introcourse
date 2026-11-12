@@ -3,13 +3,10 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { GROUP_TIMESLOTS } from "@/lib/availability";
 
-const TIMESLOTS = [
-  { id: "early_monday",   label: "Monday early   (e.g. 17:00–18:30)" },
-  { id: "late_monday",    label: "Monday late    (e.g. 19:30–21:00)" },
-  { id: "early_thursday", label: "Thursday early  (e.g. 17:00–18:30)" },
-  { id: "late_thursday",  label: "Thursday late   (e.g. 19:30–21:00)" },
-];
+// Same slots (and values) as the application form and group timing.
+const TIMESLOTS = GROUP_TIMESLOTS.map((t) => ({ id: t.value, label: t.label }));
 
 function OnboardForm() {
   const params = useSearchParams();

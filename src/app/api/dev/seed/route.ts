@@ -13,6 +13,7 @@ import { newId } from "@/lib/ids";
 import { eq } from "drizzle-orm";
 import { WEEK_DEFS } from "@/lib/lessons";
 import { QUIZ_ANSWERS } from "@/lib/quiz-answers";
+import { GROUP_TIMESLOTS } from "@/lib/availability";
 
 export const dynamic = "force-dynamic";
 
@@ -164,7 +165,7 @@ export async function GET() {
       role: "participant",
       status: "active",
       groupId,
-      availability: pickN(["monday_early","monday_late","tuesday_early","tuesday_late","wednesday_early","wednesday_late","thursday_early","thursday_late"], 3),
+      availability: pickN(GROUP_TIMESLOTS.map((t) => t.value), 2),
       createdAt: new Date(Date.now() - (25 - i) * 24 * 60 * 60 * 1000),
     });
     created.participants++;

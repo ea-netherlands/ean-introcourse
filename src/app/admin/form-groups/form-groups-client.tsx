@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  GROUP_TIMESLOTS,
+  formatAvailabilitySlot,
+  formatGroupTiming,
+  normalizeAvailability,
+  normalizeSlot,
+} from "@/lib/availability";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,29 +34,12 @@ interface Group {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const GROUP_TIMESLOTS = [
-  { value: "monday_1730",   label: "Monday 17:30" },
-  { value: "monday_1930",   label: "Monday 19:30" },
-  { value: "thursday_1730", label: "Thursday 17:30" },
-  { value: "thursday_1930", label: "Thursday 19:30" },
-];
-
-// Map raw availability slot values → human label. Two vocabularies exist:
-// the application form uses "monday_1730" etc.; the onboarding form (which
-// overwrites availability when a participant sets their password) uses
-// "early_monday" / "late_monday" / "early_thursday" / "late_thursday".
-const SLOT_LABELS: Record<string, string> = {
-  monday_1730: "Mon 17:30", monday_1930: "Mon 19:30",
-  thursday_1730: "Thu 17:30", thursday_1930: "Thu 19:30",
-  early_monday: "Mon early", late_monday: "Mon late",
-  early_thursday: "Thu early", late_thursday: "Thu late",
-  other: "Other",
-};
-
-function slotLabel(s: string) { return SLOT_LABELS[s] ?? s; }
+// One shared slot vocabulary (src/lib/availability.ts); legacy values such as
+// "early_monday" are normalised there, so matching works for old records too.
+function slotLabel(s: string) { return formatAvailabilitySlot(s, { short: true }); }
 function timingLabel(t: string | null) {
   if (!t) return null;
-  return GROUP_TIMESLOTS.find((x) => x.value === t)?.label ?? t;
+  return formatGroupTiming(t);
 }
 
 function langBadge(l?: string | null) {
@@ -64,7 +54,7 @@ function onlineBadge(o?: string | null) {
 // Does a participant's availability include this group's timeslot?
 function isCompatible(person: Person, group: Group): boolean {
   if (!group.timing) return true; // group not yet scheduled — always compatible
-  return person.availability.includes(group.timing);
+  return normalizeAvailability(person.availability).includes(normalizeSlot(group.timing));
 }
 
 // ── Main component ────────────────────────────────────────────────────────────

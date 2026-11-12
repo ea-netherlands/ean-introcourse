@@ -20,6 +20,7 @@ interface Application {
   careerStage?: string | null;
   occupation?: string | null;
   workArea?: string | null;
+  studyField?: string | null;
   eaBackground?: string | null;
   heardAbout?: string | null;
   availability?: unknown;
@@ -235,7 +236,7 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
                       </p>
                     )}
                     {app.careerStage && (
-                      <p className="text-xs text-slate-400 mt-0.5">{app.careerStage} · {app.occupation ?? ""}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{app.careerStage} · {app.occupation ?? app.studyField ?? ""}</p>
                     )}
                   </div>
 
@@ -280,6 +281,7 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
                       {app.careerStage && <DetailRow label="Career stage" value={app.careerStage} />}
                       {app.occupation && <DetailRow label="Occupation" value={app.occupation} />}
                       {app.workArea && <DetailRow label="Work area" value={app.workArea} />}
+                      {app.studyField && <DetailRow label="Field of study" value={app.studyField} />}
                     </div>
                     {app.linkedinUrl && (
                       <div className="flex gap-3">

@@ -3,7 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentParticipant } from "@/lib/auth";
+import { getCurrentParticipant, canAccessGroup } from "@/lib/auth";
 import { db, ensureMigrated, groupPosts, groups } from "@/db";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest, { params }: Context) {
   }
 
   // Access check: must be in this group OR a facilitator
-  if (me.role !== "facilitator" && me.groupId !== groupId) {
+  if (!canAccessGroup(me, groupId)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

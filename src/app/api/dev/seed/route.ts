@@ -5,7 +5,10 @@
  */
 
 import { NextResponse } from "next/server";
-import { db, ensureMigrated, applications, participants, groups, lessonProgress, lessonResponses } from "@/db";
+import {
+  db, ensureMigrated, applications, participants, groups, lessonProgress, lessonResponses,
+  sessionAttendance, groupPosts, groupPostReplies, fellowshipSessions,
+} from "@/db";
 import { newId } from "@/lib/ids";
 import { eq } from "drizzle-orm";
 import { WEEK_DEFS } from "@/lib/lessons";
@@ -80,6 +83,11 @@ export async function GET() {
   if (testEmails.length > 0) {
     // Delete participants (cascades to lesson_progress, lesson_responses)
     for (const p of existing.filter((x) => x.email.endsWith("@test.ean"))) {
+      // Same cleanup as DELETE /api/admin/participants/[id]: these FKs don't cascade.
+      await db.delete(sessionAttendance).where(eq(sessionAttendance.participantId, p.id));
+      await db.delete(groupPostReplies).where(eq(groupPostReplies.authorId, p.id));
+      await db.delete(groupPosts).where(eq(groupPosts.authorId, p.id));
+      await db.update(fellowshipSessions).set({ facilitatorId: null }).where(eq(fellowshipSessions.facilitatorId, p.id));
       await db.delete(participants).where(eq(participants.id, p.id));
     }
   }

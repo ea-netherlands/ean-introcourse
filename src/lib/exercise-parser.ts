@@ -24,9 +24,18 @@ export interface ExerciseSection {
  * to a single free-text field).
  */
 export function parseExerciseHtml(html: string): ExerciseSection[] {
+  // The scraped HTML is wrapped in a single outer Tiptap/ProseMirror
+  // editor <div>...</div>. Splitting below drops the opening tag as part
+  // of the discarded preamble, which would otherwise leave a dangling,
+  // unmatched closing </div> at the end of the last section's bodyHtml
+  // (invalid HTML → React hydration mismatch). Strip the wrapper first so
+  // every section's fragment is self-contained and balanced.
+  const wrapperMatch = html.match(/^\s*<div[^>]*class="[^"]*tiptap[^"]*"[^>]*>([\s\S]*)<\/div>\s*$/i);
+  const inner = wrapperMatch ? wrapperMatch[1] : html;
+
   // Split on every <p> that contains <strong>Exercise \d+
   // Use a lookahead so the heading stays at the start of each chunk.
-  const parts = html.split(/(?=<p[^>]*>(?:<[^>]+>)*Exercise\s+\d+)/i);
+  const parts = inner.split(/(?=<p[^>]*>(?:<[^>]+>)*Exercise\s+\d+)/i);
 
   // The first part before any Exercise heading is preamble — skip if empty
   const sections: ExerciseSection[] = [];

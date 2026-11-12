@@ -16,6 +16,8 @@ export async function GET() {
         id: groups.id,
         name: groups.name,
         cohort: groups.cohort,
+        timing: groups.timing,
+        active: groups.active,
         createdAt: groups.createdAt,
         participantCount: sql<number>`cast(count(${participants.id}) as int)`,
       })
@@ -33,9 +35,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json() as { name?: string; cohort?: string };
+    const body = await req.json() as { name?: string; cohort?: string; timing?: string };
     const name = body.name?.trim();
     const cohort = body.cohort?.trim() || null;
+    const timing = body.timing?.trim() || null;
 
     if (!name) {
       return NextResponse.json({ error: "Group name is required." }, { status: 400 });
@@ -43,8 +46,8 @@ export async function POST(req: NextRequest) {
 
     await ensureMigrated();
     const id = newId("g");
-    await db.insert(groups).values({ id, name, cohort });
-    return NextResponse.json({ id });
+    await db.insert(groups).values({ id, name, cohort, timing, active: true });
+    return NextResponse.json({ id, name, cohort, timing, active: true });
   } catch (err) {
     console.error("[admin/groups POST]", err);
     return NextResponse.json({ error: "Internal error." }, { status: 500 });

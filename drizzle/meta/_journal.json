@@ -57,6 +57,13 @@
       "when": 1757130000000,
       "tag": "0007_lesson_responses",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1757220000000,
+      "tag": "0008_group_timing",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getAllWeeksWithLessons } from "@/lib/lessons";
 import { Sidebar, MobileBar } from "@/components/sidebar";
 import { AuthBanner } from "@/components/auth-banner";
@@ -10,6 +11,11 @@ export default async function MaterialsLayout({
 }) {
   const weeks = getAllWeeksWithLessons();
   const participant = await getCurrentParticipant().catch(() => null);
+
+  // Graduated participants land on the graduation page instead of materials
+  if (participant?.status === "completed") {
+    redirect("/graduated");
+  }
 
   return (
     <div

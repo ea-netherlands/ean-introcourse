@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatAvailability } from "@/lib/availability";
 
 interface Application {
   id: string;
@@ -32,6 +33,11 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState<"accept" | "reject" | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [selectedHandled, setSelectedHandled] = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const pending = apps.filter((a) => a.status === "pending");
   const handled = apps.filter((a) => a.status !== "pending");
@@ -69,17 +75,52 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
     router.refresh();
   }
 
+  async function deleteApp(id: string) {
+    setDeletingId(id);
+    await fetch(`/api/admin/applications/${id}`, { method: "DELETE" });
+    setDeletingId(null);
+    setConfirmDeleteId(null);
+    router.refresh();
+  }
+
+  function toggleHandled(id: string) {
+    setSelectedHandled((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setConfirmBulkDelete(false);
+  }
+
+  function toggleAllHandled() {
+    const allHandledIds = handled.map((a) => a.id);
+    const allChecked = allHandledIds.length > 0 && allHandledIds.every((id) => selectedHandled.has(id));
+    setSelectedHandled(allChecked ? new Set() : new Set(allHandledIds));
+    setConfirmBulkDelete(false);
+  }
+
+  async function deleteSelectedHandled() {
+    setBulkDeleting(true);
+    try {
+      await Promise.all(
+        [...selectedHandled].map((id) => fetch(`/api/admin/applications/${id}`, { method: "DELETE" }))
+      );
+      setSelectedHandled(new Set());
+      router.refresh();
+    } finally {
+      setBulkDeleting(false);
+      setConfirmBulkDelete(false);
+    }
+  }
+
   function formatDate(d: string) {
     return new Date(d).toLocaleDateString("en-GB", {
       day: "numeric", month: "short", year: "numeric",
     });
   }
 
-  const availability = (a: Application): string => {
-    if (!a.availability) return "";
-    if (Array.isArray(a.availability)) return (a.availability as string[]).join(", ");
-    return String(a.availability);
-  };
+  const availability = (a: Application): string => formatAvailability(a.availability);
 
   const onlineLabel = (v?: string | null) => {
     if (!v) return "";
@@ -240,6 +281,19 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
                       {app.occupation && <DetailRow label="Occupation" value={app.occupation} />}
                       {app.workArea && <DetailRow label="Work area" value={app.workArea} />}
                     </div>
+                    {app.linkedinUrl && (
+                      <div className="flex gap-3">
+                        <span className="shrink-0 text-xs font-medium text-slate-400 w-32">LinkedIn</span>
+                        <a
+                          href={app.linkedinUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-teal-600 hover:underline truncate"
+                        >
+                          {app.linkedinUrl}
+                        </a>
+                      </div>
+                    )}
                     {availability(app) && (
                       <DetailRow label="Availability" value={availability(app)} />
                     )}
@@ -270,22 +324,88 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
             Handled ({handled.length})
           </h2>
           <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+            {selectedHandled.size > 0 && (
+              <div className="flex items-center justify-between px-4 py-2.5 bg-red-50 border-b border-red-100">
+                <span className="text-sm text-red-700">
+                  {confirmBulkDelete
+                    ? `Permanently delete ${selectedHandled.size} application(s)? This cannot be undone.`
+                    : `${selectedHandled.size} selected`}
+                </span>
+                {confirmBulkDelete ? (
+                  <span className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={deleteSelectedHandled}
+                      disabled={bulkDeleting}
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition"
+                    >
+                      {bulkDeleting ? "Deleting…" : "Yes, delete"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmBulkDelete(false)}
+                      disabled={bulkDeleting}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white transition"
+                    >
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setConfirmBulkDelete(true)}
+                    className="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition shrink-0"
+                  >
+                    Delete selected
+                  </button>
+                )}
+              </div>
+            )}
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
+                  <th className="px-4 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={handled.length > 0 && handled.every((a) => selectedHandled.has(a.id))}
+                      onChange={toggleAllHandled}
+                      className="w-4 h-4 accent-teal-600 cursor-pointer"
+                    />
+                  </th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Name</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">City</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">LinkedIn</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {handled.map((app) => (
                   <tr key={app.id}>
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedHandled.has(app.id)}
+                        onChange={() => toggleHandled(app.id)}
+                        className="w-4 h-4 accent-teal-600 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-4 py-3 font-medium text-slate-800">{app.name}</td>
                     <td className="px-4 py-3 text-slate-500">{app.email}</td>
                     <td className="px-4 py-3 text-slate-400 text-xs">{app.city ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {app.linkedinUrl ? (
+                        <a
+                          href={app.linkedinUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-teal-600 hover:underline"
+                        >
+                          LinkedIn ↗
+                        </a>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -298,6 +418,33 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-400 text-xs">{formatDate(app.submittedAt)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      {confirmDeleteId === app.id ? (
+                        <span className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => deleteApp(app.id)}
+                            disabled={deletingId === app.id}
+                            className="text-xs font-medium text-red-600 hover:underline disabled:opacity-50"
+                          >
+                            {deletingId === app.id ? "Deleting…" : "Confirm"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-xs text-slate-400 hover:underline"
+                          >
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(app.id)}
+                          className="text-xs text-slate-300 hover:text-red-600 transition"
+                          title="Delete application"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

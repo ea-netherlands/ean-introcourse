@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { TIMESLOTS } from "@/lib/availability";
 
 // ── Constants matching Typeform exactly ──────────────────────────────
 
@@ -54,12 +55,20 @@ const WORK_AREAS = [
   "Other",
 ];
 
-const TIMESLOTS = [
-  { value: "monday_1730", label: "Monday 17:30" },
-  { value: "monday_1930", label: "Monday 19:30" },
-  { value: "thursday_1730", label: "Thursday 17:30" },
-  { value: "thursday_1930", label: "Thursday 19:30" },
-  { value: "other", label: "Other" },
+// Shown instead of occupation/work-area for students & PhD students
+const STUDY_FIELDS = [
+  "Philosophy / Ethics",
+  "Economics / Business",
+  "Computer science / AI / Data science",
+  "Mathematics / Statistics",
+  "Natural sciences (biology, chemistry, physics…)",
+  "Engineering / Technology",
+  "Medicine / Health sciences / Public health",
+  "Social sciences (sociology, political science, psychology…)",
+  "Law / Legal studies",
+  "Environmental sciences / Climate",
+  "Humanities (history, languages, literature…)",
+  "Other",
 ];
 
 const HEARD_ABOUT_OPTIONS = [
@@ -84,18 +93,31 @@ export default function ApplyPage() {
 
   // Step 1 — Why join
   const [mainReason, setMainReason] = useState<string[]>([]);
+  const [mainReasonOther, setMainReasonOther] = useState("");
   const [promptedBy, setPromptedBy] = useState("");
 
   // Step 2 — Background
   const [educationLevel, setEducationLevel] = useState("");
+  const [educationLevelOther, setEducationLevelOther] = useState("");
   const [careerStage, setCareerStage] = useState("");
   const [occupation, setOccupation] = useState("");
+  const [occupationOther, setOccupationOther] = useState("");
   const [workArea, setWorkArea] = useState("");
+  const [workAreaOther, setWorkAreaOther] = useState("");
+  // Shown instead of occupation/workArea when careerStage is student/PhD
+  const [studyField, setStudyField] = useState("");
+  const [studyFieldOther, setStudyFieldOther] = useState("");
   const [motivation, setMotivation] = useState("");
+
+  // Whether the respondent is a student (drives branching in step 2)
+  const isStudent =
+    careerStage === "Bachelor's or Master's student" ||
+    careerStage === "PhD student";
 
   // Step 3 — Schedule
   const [language, setLanguage] = useState("");
   const [availability, setAvailability] = useState<string[]>([]);
+  const [availabilityOther, setAvailabilityOther] = useState("");
   const [onlinePreference, setOnlinePreference] = useState("");
 
   // Step 4 — Details & consent
@@ -105,6 +127,7 @@ export default function ApplyPage() {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [city, setCity] = useState("");
   const [heardAbout, setHeardAbout] = useState("");
+  const [heardAboutOther, setHeardAboutOther] = useState("");
   const [privacyConsent, setPrivacyConsent] = useState(false);
 
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
@@ -130,13 +153,23 @@ export default function ApplyPage() {
       return (
         educationLevel.length > 0 &&
         careerStage.length > 0 &&
-        occupation.length > 0 &&
-        workArea.length > 0 &&
+        (isStudent ? studyField.length > 0 : occupation.length > 0 && workArea.length > 0) &&
         motivation.trim().length >= 50
       );
     if (step === 3)
       return language.length > 0 && availability.length > 0 && onlinePreference.length > 0;
     return true;
+  }
+
+  /** Resolve "Other" selections to include the custom typed value */
+  function resolveOther(value: string, customText: string) {
+    return value === "Other" && customText.trim() ? `Other: ${customText.trim()}` : value;
+  }
+  function resolveOtherArray(values: string[], customText: string) {
+    return values.map((v) => (v === "Other" && customText.trim() ? `Other: ${customText.trim()}` : v));
+  }
+  function resolveOtherSlots(values: string[], customText: string) {
+    return values.map((v) => (v === "other" && customText.trim() ? `other: ${customText.trim()}` : v));
   }
 
   async function submit(e: React.FormEvent) {
@@ -155,17 +188,18 @@ export default function ApplyPage() {
         phone: phone.trim() || null,
         linkedinUrl: linkedinUrl.trim() || null,
         city: city.trim() || null,
-        mainReason,
+        mainReason: resolveOtherArray(mainReason, mainReasonOther),
         promptedBy: promptedBy.trim(),
         motivation: motivation.trim(),
-        educationLevel,
+        educationLevel: resolveOther(educationLevel, educationLevelOther),
         careerStage,
-        occupation,
-        workArea,
+        occupation: isStudent ? null : resolveOther(occupation, occupationOther),
+        workArea: isStudent ? null : resolveOther(workArea, workAreaOther),
+        studyField: isStudent ? resolveOther(studyField, studyFieldOther) : null,
         language,
-        availability,
+        availability: resolveOtherSlots(availability, availabilityOther),
         onlinePreference,
-        heardAbout: heardAbout || null,
+        heardAbout: resolveOther(heardAbout, heardAboutOther) || null,
         privacyConsent,
       }),
     });
@@ -192,8 +226,8 @@ export default function ApplyPage() {
           </p>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
             Questions? Email us at{" "}
-            <a href="mailto:fellowship@effectiefaltruisme.nl" className="text-ea-teal underline">
-              fellowship@effectiefaltruisme.nl
+            <a href="mailto:programmes@effectiefaltruisme.nl" className="text-ea-teal underline">
+              programmes@effectiefaltruisme.nl
             </a>
           </p>
         </div>
@@ -254,6 +288,17 @@ export default function ApplyPage() {
                       </ToggleChip>
                     ))}
                   </div>
+                  {mainReason.includes("Other") && (
+                    <input
+                      type="text"
+                      value={mainReasonOther}
+                      onChange={(e) => setMainReasonOther(e.target.value)}
+                      placeholder="Please describe your reason…"
+                      autoFocus
+                      className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors mt-2"
+                      style={{ background: "var(--bg-hover)", border: "1px solid var(--color-ea-teal)", color: "var(--text-primary)" }}
+                    />
+                  )}
                 </Field>
 
                 <Field label="What prompted you to sign up for this course?" required hint="1–2 sentences">
@@ -273,7 +318,7 @@ export default function ApplyPage() {
             {step === 2 && (
               <>
                 <StepTitle step={2} total={TOTAL_STEPS} title="Your background" />
-                <p className="text-xs -mt-3" style={{ color: "var(--text-muted)" }}>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                   We use this to form balanced groups and tailor materials.
                 </p>
 
@@ -285,6 +330,17 @@ export default function ApplyPage() {
                       </RadioRow>
                     ))}
                   </div>
+                  {educationLevel === "Other" && (
+                    <input
+                      type="text"
+                      value={educationLevelOther}
+                      onChange={(e) => setEducationLevelOther(e.target.value)}
+                      placeholder="Please describe your education level…"
+                      autoFocus
+                      className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors mt-2"
+                      style={{ background: "var(--bg-hover)", border: "1px solid var(--color-ea-teal)", color: "var(--text-primary)" }}
+                    />
+                  )}
                 </Field>
 
                 <Field label="What career stage are you in?" required>
@@ -297,25 +353,76 @@ export default function ApplyPage() {
                   </div>
                 </Field>
 
-                <Field label="What is your current occupation?" required>
-                  <div className="space-y-2 mt-1">
-                    {OCCUPATIONS.map((opt) => (
-                      <RadioRow key={opt} selected={occupation === opt} onClick={() => setOccupation(opt)}>
-                        {opt}
-                      </RadioRow>
-                    ))}
-                  </div>
-                </Field>
+                {/* ── Student branch: field of study ── */}
+                {isStudent ? (
+                  <Field
+                    label={careerStage === "PhD student" ? "What field do you research?" : "What field do you study?"}
+                    required
+                  >
+                    <div className="space-y-2 mt-1">
+                      {STUDY_FIELDS.map((opt) => (
+                        <RadioRow key={opt} selected={studyField === opt} onClick={() => setStudyField(opt)}>
+                          {opt}
+                        </RadioRow>
+                      ))}
+                    </div>
+                    {studyField === "Other" && (
+                      <input
+                        type="text"
+                        value={studyFieldOther}
+                        onChange={(e) => setStudyFieldOther(e.target.value)}
+                        placeholder="Please describe your field…"
+                        autoFocus
+                        className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors mt-2"
+                        style={{ background: "var(--bg-hover)", border: "1px solid var(--color-ea-teal)", color: "var(--text-primary)" }}
+                      />
+                    )}
+                  </Field>
+                ) : (
+                  <>
+                    <Field label="What is your current occupation?" required>
+                      <div className="space-y-2 mt-1">
+                        {OCCUPATIONS.map((opt) => (
+                          <RadioRow key={opt} selected={occupation === opt} onClick={() => setOccupation(opt)}>
+                            {opt}
+                          </RadioRow>
+                        ))}
+                      </div>
+                      {occupation === "Other" && (
+                        <input
+                          type="text"
+                          value={occupationOther}
+                          onChange={(e) => setOccupationOther(e.target.value)}
+                          placeholder="Please describe your occupation…"
+                          autoFocus
+                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors mt-2"
+                          style={{ background: "var(--bg-hover)", border: "1px solid var(--color-ea-teal)", color: "var(--text-primary)" }}
+                        />
+                      )}
+                    </Field>
 
-                <Field label="Which area best matches the work you spend most time on?" required>
-                  <div className="space-y-2 mt-1">
-                    {WORK_AREAS.map((opt) => (
-                      <RadioRow key={opt} selected={workArea === opt} onClick={() => setWorkArea(opt)}>
-                        {opt}
-                      </RadioRow>
-                    ))}
-                  </div>
-                </Field>
+                    <Field label="Which area best matches the work you spend most time on?" required>
+                      <div className="space-y-2 mt-1">
+                        {WORK_AREAS.map((opt) => (
+                          <RadioRow key={opt} selected={workArea === opt} onClick={() => setWorkArea(opt)}>
+                            {opt}
+                          </RadioRow>
+                        ))}
+                      </div>
+                      {workArea === "Other" && (
+                        <input
+                          type="text"
+                          value={workAreaOther}
+                          onChange={(e) => setWorkAreaOther(e.target.value)}
+                          placeholder="Please describe your work area…"
+                          autoFocus
+                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors mt-2"
+                          style={{ background: "var(--bg-hover)", border: "1px solid var(--color-ea-teal)", color: "var(--text-primary)" }}
+                        />
+                      )}
+                    </Field>
+                  </>
+                )}
 
                 <Field
                   label="Tell us about a time you thought hard about how to get the most out of limited time, money, or effort."
@@ -384,6 +491,17 @@ export default function ApplyPage() {
                       </ToggleChip>
                     ))}
                   </div>
+                  {availability.includes("other") && (
+                    <input
+                      type="text"
+                      value={availabilityOther}
+                      onChange={(e) => setAvailabilityOther(e.target.value)}
+                      placeholder="Which time works for you? (e.g. Wednesday 18:00)"
+                      autoFocus
+                      className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors mt-2"
+                      style={{ background: "var(--bg-hover)", border: "1px solid var(--color-ea-teal)", color: "var(--text-primary)" }}
+                    />
+                  )}
                 </Field>
 
                 <Field label="Do you prefer sessions online or in person?" required>
@@ -492,6 +610,17 @@ export default function ApplyPage() {
                       </ToggleChip>
                     ))}
                   </div>
+                  {heardAbout === "Other" && (
+                    <input
+                      type="text"
+                      value={heardAboutOther}
+                      onChange={(e) => setHeardAboutOther(e.target.value)}
+                      placeholder="How did you hear about us?"
+                      autoFocus
+                      className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors mt-2"
+                      style={{ background: "var(--bg-hover)", border: "1px solid var(--color-ea-teal)", color: "var(--text-primary)" }}
+                    />
+                  )}
                 </Field>
 
                 {/* Privacy consent */}

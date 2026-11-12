@@ -12,6 +12,7 @@ import {
 } from "@/db";
 import { Badge } from "@/components/ui";
 import { NewSessionForm } from "./new-session-form";
+import { googleCalendarConfigured } from "@/lib/google-calendar";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +73,11 @@ export default async function AdminSessionsPage() {
       {/* Create form */}
       <div className="bg-white border border-slate-200 rounded-xl p-5">
         <h2 className="text-sm font-semibold text-slate-700 mb-4">Schedule a new session</h2>
-        <NewSessionForm groups={allGroups} facilitators={facilitators} />
+        <NewSessionForm
+          groups={allGroups}
+          facilitators={facilitators}
+          googleConfigured={googleCalendarConfigured()}
+        />
       </div>
 
       {/* Upcoming */}
@@ -100,11 +105,13 @@ export default async function AdminSessionsPage() {
                 <div className="flex items-center gap-2">
                   {s.groupName && <Badge variant="default">{s.groupName}</Badge>}
                   {s.facilitatorName && (
-                    <span className="text-xs text-slate-400">{s.facilitatorName}</span>
+                    <span className="text-xs text-slate-500 flex items-center gap-1">
+                      <span>👤</span>{s.facilitatorName}
+                    </span>
                   )}
                   {s.meetLink && (
                     <span className="text-xs px-2 py-0.5 bg-teal-50 text-teal-700 rounded-full">
-                      Meet link
+                      Meet ✓
                     </span>
                   )}
                 </div>
@@ -136,6 +143,11 @@ export default async function AdminSessionsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {s.groupName && <Badge variant="default">{s.groupName}</Badge>}
+                  {s.facilitatorName && (
+                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <span>👤</span>{s.facilitatorName}
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}

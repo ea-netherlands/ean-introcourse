@@ -18,7 +18,10 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (app.status !== "pending") return NextResponse.json({ error: "Already handled" }, { status: 409 });
 
-  // Create participant (status pending until onboarding complete)
+  // Create participant (status pending until onboarding complete).
+  // Carry over the availability they selected on the application form —
+  // otherwise the Form Groups page has nothing to assign by until they
+  // separately re-select it during onboarding.
   const participantId = newId("p");
   await db.insert(participants).values({
     id: participantId,
@@ -26,6 +29,7 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
     email: app.email,
     role: "participant",
     status: "pending",
+    availability: Array.isArray(app.availability) ? (app.availability as string[]) : undefined,
   });
 
   // Mark application as accepted

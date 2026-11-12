@@ -1,6 +1,7 @@
 import { db, participants, ensureMigrated } from "@/db";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
+import { AddFacilitatorForm } from "./add-facilitator-form";
 
 export const dynamic = "force-dynamic";
 
@@ -46,21 +47,24 @@ export default async function FacilitatorsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Facilitators</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {facilitators.length} facilitator{facilitators.length !== 1 ? "s" : ""} total
           </p>
         </div>
-        <a
-          href="/facilitator/signup"
-          target="_blank"
-          rel="noopener"
-          className="text-xs text-teal-600 underline"
-        >
-          Facilitator sign-up link ↗
-        </a>
+        <div className="flex items-center gap-3 shrink-0">
+          <a
+            href="/facilitator/signup"
+            target="_blank"
+            rel="noopener"
+            className="text-xs text-slate-400 hover:text-teal-600 underline transition"
+          >
+            Sign-up link ↗
+          </a>
+          <AddFacilitatorForm />
+        </div>
       </div>
 
       {facilitators.length === 0 && (

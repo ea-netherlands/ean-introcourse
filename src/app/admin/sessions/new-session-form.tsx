@@ -9,14 +9,17 @@ interface Facilitator { id: string; name: string }
 export function NewSessionForm({
   groups,
   facilitators,
+  googleConfigured,
 }: {
   groups: Group[];
   facilitators: Facilitator[];
+  googleConfigured: boolean;
 }) {
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState("EA intro course - online meeting");
   const [groupId, setGroupId] = useState("");
   const [facilitatorId, setFacilitatorId] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [createMeet, setCreateMeet] = useState(googleConfigured); // auto-create Meet by default
   const [meetLink, setMeetLink] = useState("");
   const [agenda, setAgenda] = useState("");
   const [repeatWeeks, setRepeatWeeks] = useState(1); // 1 = no repeat, up to 8
@@ -49,7 +52,8 @@ export function NewSessionForm({
             groupId: groupId || null,
             facilitatorId: facilitatorId || null,
             scheduledAt: dates[i],
-            meetLink: meetLink.trim() || null,
+            meetLink: createMeet ? null : (meetLink.trim() || null),
+            createMeet,
             agenda: agenda.trim() || null,
           }),
         });
@@ -118,17 +122,53 @@ export function NewSessionForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Meeting link (Google Meet / Zoom / Teams)</label>
-          <input
-            type="url"
-            value={meetLink}
-            onChange={(e) => setMeetLink(e.target.value)}
-            placeholder="https://meet.google.com/…"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-          />
-          <p className="text-xs text-slate-400 mt-1">
-            Tip: use a permanent Zoom or Teams link, or a Google Workspace Meet link (sessions run 75 min; free Meet cuts groups off at 60 min).
-          </p>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Meeting link</label>
+
+          {/* Auto-create via EA Google account */}
+          <label className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition ${
+            createMeet
+              ? "border-teal-300 bg-teal-50"
+              : "border-slate-200 bg-white opacity-60"
+          } ${!googleConfigured ? "opacity-40 cursor-not-allowed" : ""}`}>
+            <input
+              type="checkbox"
+              checked={createMeet}
+              disabled={!googleConfigured}
+              onChange={(e) => setCreateMeet(e.target.checked)}
+              className="accent-teal-600 w-4 h-4"
+            />
+            <div>
+              <span className="text-sm font-medium text-slate-700">
+                Auto-create Google Meet via EA account
+              </span>
+              {!googleConfigured && (
+                <p className="text-[11px] text-amber-600 mt-0.5">
+                  GOOGLE_* env vars not configured — set them to enable this.
+                </p>
+              )}
+              {googleConfigured && createMeet && (
+                <p className="text-[11px] text-teal-600 mt-0.5">
+                  A unique Google Meet link will be created for each session on the EA calendar.
+                </p>
+              )}
+            </div>
+          </label>
+
+          {/* Manual link fallback */}
+          {!createMeet && (
+            <div className="mt-2">
+              <input
+                type="url"
+                value={meetLink}
+                onChange={(e) => setMeetLink(e.target.value)}
+                placeholder="https://meet.google.com/… or Zoom/Teams link"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                Note: a single static link is shared across all sessions. Sessions run 75 min; free Google Meet cuts groups off at 60 min, so use Zoom, Teams or a Google Workspace Meet link.
+              </p>
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">

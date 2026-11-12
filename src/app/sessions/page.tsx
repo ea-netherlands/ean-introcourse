@@ -17,6 +17,7 @@ import {
 import { getCurrentParticipant } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FacilitatorSessionForm } from "./facilitator-session-form";
+import { googleCalendarConfigured } from "@/lib/google-calendar";
 
 export const dynamic = "force-dynamic";
 
@@ -128,6 +129,7 @@ export default async function SessionsPage() {
             facilitators={facilitators}
             defaultGroupId={me.groupId ?? ""}
             defaultFacilitatorId={me.id}
+            googleConfigured={googleCalendarConfigured()}
           />
         </section>
 

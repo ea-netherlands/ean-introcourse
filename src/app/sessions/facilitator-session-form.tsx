@@ -11,16 +11,19 @@ export function FacilitatorSessionForm({
   facilitators,
   defaultGroupId,
   defaultFacilitatorId,
+  googleConfigured = false,
 }: {
   groups: Group[];
   facilitators: Facilitator[];
   defaultGroupId?: string;
   defaultFacilitatorId?: string;
+  googleConfigured?: boolean;
 }) {
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState("EA intro course - online meeting");
   const [groupId, setGroupId] = useState(defaultGroupId ?? "");
   const [facilitatorId, setFacilitatorId] = useState(defaultFacilitatorId ?? "");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [createMeet, setCreateMeet] = useState(googleConfigured);
   const [meetLink, setMeetLink] = useState("");
   const [agenda, setAgenda] = useState(""); // used when repeatWeeks === 1
   const [repeatWeeks, setRepeatWeeks] = useState(1);
@@ -76,7 +79,8 @@ export function FacilitatorSessionForm({
             groupId: groupId || null,
             facilitatorId: facilitatorId || null,
             scheduledAt: dates[i],
-            meetLink: meetLink.trim() || null,
+            meetLink: createMeet ? null : (meetLink.trim() || null),
+            createMeet,
             agenda: sessionAgenda,
           }),
         });
@@ -168,17 +172,57 @@ export function FacilitatorSessionForm({
         )}
         <div>
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Meeting link</label>
-          <input
-            type="url"
-            value={meetLink}
-            onChange={(e) => setMeetLink(e.target.value)}
-            placeholder="https://meet.google.com/…"
-            className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-            style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-          />
-          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-            Sessions run 75 min, so use Zoom or Teams. Free Google Meet cuts groups off at 60 min.
-          </p>
+
+          {/* Auto-create via EA Google account */}
+          <label
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 cursor-pointer transition"
+            style={{
+              background: createMeet ? "rgba(22,135,156,0.08)" : "var(--bg-hover)",
+              border: createMeet ? "1px solid rgba(22,135,156,0.4)" : "1px solid var(--border)",
+              opacity: googleConfigured ? 1 : 0.5,
+              cursor: googleConfigured ? "pointer" : "not-allowed",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={createMeet}
+              disabled={!googleConfigured}
+              onChange={(e) => setCreateMeet(e.target.checked)}
+              className="accent-teal-600 w-4 h-4"
+            />
+            <div>
+              <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Auto-create Google Meet via EA account
+              </span>
+              {!googleConfigured && (
+                <p className="text-xs mt-0.5" style={{ color: "#d97706" }}>
+                  GOOGLE_* env vars not set — configure them to enable this.
+                </p>
+              )}
+              {googleConfigured && createMeet && (
+                <p className="text-xs mt-0.5" style={{ color: "var(--color-ea-teal)" }}>
+                  A unique Meet link will be created on the EA calendar for each session.
+                </p>
+              )}
+            </div>
+          </label>
+
+          {/* Manual link fallback */}
+          {!createMeet && (
+            <div className="mt-2">
+              <input
+                type="url"
+                value={meetLink}
+                onChange={(e) => setMeetLink(e.target.value)}
+                placeholder="https://meet.google.com/… or Zoom/Teams link"
+                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+              />
+              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                A single static link is shared for all sessions. Sessions run 75 min, so use Zoom or Teams. Free Google Meet cuts groups off at 60 min.
+              </p>
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>

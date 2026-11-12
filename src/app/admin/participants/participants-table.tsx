@@ -9,7 +9,7 @@ export interface ParticipantRow {
   id: string;
   name: string;
   email: string;
-  role: "participant" | "facilitator";
+  role: "participant" | "facilitator" | "admin";
   status: string;
   groupName: string | null;
   done: number;

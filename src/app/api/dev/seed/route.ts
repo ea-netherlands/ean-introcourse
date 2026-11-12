@@ -13,9 +13,8 @@ import { QUIZ_ANSWERS } from "@/lib/quiz-answers";
 
 export const dynamic = "force-dynamic";
 
-if (process.env.NODE_ENV === "production") {
-  throw new Error("Seed route must never be deployed to production");
-}
+// Note: the production guard lives inside GET. A top-level throw here breaks
+// `next build`, which loads every route module while collecting page data.
 
 // ── Realistic Dutch test data ────────────────────────────────────────────────
 
@@ -69,6 +68,9 @@ function pickN<T>(arr: T[], n: number): T[] {
 // ── Seeder ───────────────────────────────────────────────────────────────────
 
 export async function GET() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   await ensureMigrated();
 
   // Clear existing test data (emails ending in @test.ean)

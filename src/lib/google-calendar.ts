@@ -20,6 +20,7 @@
  */
 
 import { createSign } from "crypto";
+import { SESSION_DURATION_MINUTES } from "@/lib/calendar";
 
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const SCOPES = "https://www.googleapis.com/auth/calendar.events";
@@ -80,8 +81,8 @@ export interface CreatedMeetEvent {
   calendarLink: string;
 }
 
-/** Default session duration from env (falls back to 90 min). */
-const DEFAULT_DURATION = Number(process.env.DEFAULT_SESSION_DURATION_MINUTES ?? 90);
+/** Default session duration: same 75 minutes as the calendar links and .ics files. */
+const DEFAULT_DURATION = SESSION_DURATION_MINUTES;
 
 /**
  * Create a Google Calendar event with a unique Google Meet link.

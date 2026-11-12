@@ -104,9 +104,9 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 
 ## Features
 
-- **Applicant:** `/apply` 4-step form mirroring the Typeform; "Other" options get free text;
-  students get study-field questions instead of occupation/work area. Accepted applicants get a
-  7-day `/onboard?token=` link to pick availability and set a password.
+- **Applicant:** `/apply` 4-step form based on the Typeform ("Other" is a plain option — no
+  free-text field yet; no separate student branch yet). Accepted applicants get a 7-day
+  `/onboard?token=` link to pick availability and set a password.
 - **Participant:** `/materials/[slug]/[lessonId]` with progress bar, quizzes (locked after submit,
   score + explanations) and exercises; answers saved via `/api/exercises/submit` →
   `lesson_responses`. `/account` (profile, upcoming sessions + calendar links), `/chat`
@@ -140,11 +140,23 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
    group timing/active toggle (migration 0008), admin "add facilitator" form, prev/next on
    participant pages, delete for participants/applications/groups, the full-page form-groups
    layout, `src/lib/availability.ts` + fixed `SLOT_LABELS`, accept route copying `availability`,
-   `/api/dev/seed`. The chat exports outside the repo describe each change in detail.
+   `/api/dev/seed`, apply-form "Other" free-text fields and the student branch (study field
+   instead of occupation/work area). The chat exports outside the repo describe each change.
+1b. Access-control gaps (verified 2026-11-12): magic-link login (`consumeLoginToken` +
+   `/api/auth/send-link`) ignores `status`, so pending facilitators and accepted-but-not-onboarded
+   applicants can log in by magic link (password login does block them). Facilitators can open
+   any group's `/group/[groupId]/overview` and chat, not only their own.
 2. Two incompatible availability vocabularies: apply form (`monday_1930`…) vs onboarding
    (`early_monday`…), so group matching never lines up. Needs a decision.
-3. Go-live hardening: rate-limit magic-link sending, privacy policy page (GDPR), Resend domain
-   verification for the From address, application-received email, session reminder cron.
+3. Go-live hardening: rate-limit magic-link sending, privacy policy page (GDPR; apply links to
+   effectiefaltruisme.nl/privacy), noindex/robots, Resend domain verification for the From
+   address, application-received email, session reminder cron (`cron/daily` is only TODOs),
+   escape names in email HTML, `npm audit` (critical advisory on `next` → upgrade to 16.4.x).
+3b. Smaller gaps: no participant forgot-password; groups can only be created (no edit/timing/
+   deactivate/delete); only sessions can be deleted; avatar is a URL, no upload; saved quiz
+   answers aren't reloaded on revisit; `/api/materials/complete` is a stub; unused
+   `exercise-form.tsx`/`lesson-exercise-form.tsx`; apply success screen shows fellowship@ instead
+   of programmes@.
 4. Google login: researched (Auth.js), not built; recommendation was to keep magic links.
 
 Full chat exports from the original build live outside the repo

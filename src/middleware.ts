@@ -24,9 +24,14 @@ export async function middleware(req: NextRequest) {
   const isApiRoute = pathname.startsWith("/api/admin");
   const isAdminRoute = pathname.startsWith("/admin") || isApiRoute;
 
+  // Facilitators create sessions via POST /api/admin/sessions; the route
+  // itself verifies the facilitator's session (needs the DB, not available here).
+  const facilitatorSessionCreate =
+    pathname === "/api/admin/sessions" && req.method === "POST";
+
   // Protect all /admin/* pages and /api/admin/* routes, except the
   // handful that must stay public (login page/endpoint, forgot-password).
-  if (isAdminRoute && !PUBLIC_ADMIN_PATHS.has(pathname)) {
+  if (isAdminRoute && !PUBLIC_ADMIN_PATHS.has(pathname) && !facilitatorSessionCreate) {
     const cookie = req.cookies.get(ADMIN_COOKIE)?.value;
     const adminPw = process.env.ADMIN_PASSWORD;
 

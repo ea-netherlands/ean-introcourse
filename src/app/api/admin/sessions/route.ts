@@ -14,6 +14,16 @@ import {
 } from "@/db";
 import { newId } from "@/lib/ids";
 import { createMeetEvent } from "@/lib/google-calendar";
+import { createHash } from "node:crypto";
+import { getCurrentParticipant } from "@/lib/auth";
+
+/** Admin cookie check, mirroring src/middleware.ts. */
+function isAdminRequest(req: NextRequest): boolean {
+  const cookie = req.cookies.get("ean_admin_auth")?.value;
+  const adminPw = process.env.ADMIN_PASSWORD;
+  if (!adminPw || !cookie) return false;
+  return cookie === createHash("sha256").update(adminPw).digest("hex");
+}
 
 export async function GET() {
   await ensureMigrated();
@@ -40,9 +50,17 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   await ensureMigrated();
+
+  // Only admins and active facilitators may create sessions.
+  const admin = isAdminRequest(req);
+  const me = admin ? null : await getCurrentParticipant().catch(() => null);
+  if (!admin && !(me && me.role === "facilitator" && me.status === "active")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => ({}));
 
-  const { title, groupId, facilitatorId, scheduledAt, meetLink, agenda, createMeet } = body as {
+  const { title, groupId, scheduledAt, meetLink, agenda, createMeet } = body as {
     title?: string;
     groupId?: string;
     facilitatorId?: string;
@@ -51,6 +69,10 @@ export async function POST(req: NextRequest) {
     agenda?: string;
     createMeet?: boolean;
   };
+  // Facilitators can only create sessions under their own name.
+  const facilitatorId = admin
+    ? (body as { facilitatorId?: string }).facilitatorId
+    : me!.id;
 
   if (!title?.trim() || !scheduledAt) {
     return NextResponse.json({ error: "title and scheduledAt are required" }, { status: 400 });

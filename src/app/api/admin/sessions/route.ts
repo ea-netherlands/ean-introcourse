@@ -14,15 +14,12 @@ import {
 } from "@/db";
 import { newId } from "@/lib/ids";
 import { createMeetEvent } from "@/lib/google-calendar";
-import { createHash } from "node:crypto";
+import { ADMIN_COOKIE, verifyAdminSession } from "@/lib/admin-session";
 import { getCurrentParticipant } from "@/lib/auth";
 
-/** Admin cookie check, mirroring src/middleware.ts. */
-function isAdminRequest(req: NextRequest): boolean {
-  const cookie = req.cookies.get("ean_admin_auth")?.value;
-  const adminPw = process.env.ADMIN_PASSWORD;
-  if (!adminPw || !cookie) return false;
-  return cookie === createHash("sha256").update(adminPw).digest("hex");
+/** Admin session check, the same one src/middleware.ts makes. */
+function isAdminRequest(req: NextRequest): Promise<boolean> {
+  return verifyAdminSession(req.cookies.get(ADMIN_COOKIE)?.value, process.env.ADMIN_PASSWORD);
 }
 
 export async function GET() {
@@ -52,7 +49,7 @@ export async function POST(req: NextRequest) {
   await ensureMigrated();
 
   // Only admins and active facilitators may create sessions.
-  const admin = isAdminRequest(req);
+  const admin = await isAdminRequest(req);
   const me = admin ? null : await getCurrentParticipant().catch(() => null);
   if (!admin && !(me && me.role === "facilitator" && me.status === "active")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

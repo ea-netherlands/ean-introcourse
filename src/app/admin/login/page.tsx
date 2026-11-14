@@ -24,7 +24,9 @@ function LoginForm() {
     });
     setLoading(false);
     if (res.ok) {
-      router.push(params.get("next") ?? "/admin");
+      const next = params.get("next") ?? "";
+      // Only ever a page on this site, never another address.
+      router.push(/^\/(?!\/)[^\\]*$/.test(next) ? next : "/admin");
     } else {
       setError("Incorrect password.");
     }

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHash } from "crypto";
+import {
+  ADMIN_COOKIE,
+  ADMIN_SESSION_SECONDS,
+  issueAdminSession,
+  passwordMatches,
+} from "@/lib/admin-session";
 
-const ADMIN_COOKIE = "ean_admin_auth";
-const COOKIE_MAX_AGE = 60 * 60 * 8; // 8 hours
+/** A wrong password costs this long, which makes guessing in bulk impractical. */
+const WRONG_PASSWORD_DELAY_MS = 750;
 
 export async function POST(req: NextRequest) {
   const adminPw = process.env.ADMIN_PASSWORD;
@@ -11,23 +16,28 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const submitted = typeof body.password === "string" ? body.password : "";
+  const submitted = typeof body.password === "string" ? body.password.slice(0, 500) : "";
 
-  const submittedHash = createHash("sha256").update(submitted).digest("hex");
-  const correctHash = createHash("sha256").update(adminPw).digest("hex");
-
-  if (submittedHash !== correctHash) {
+  if (!(await passwordMatches(submitted, adminPw))) {
+    await new Promise((resolve) => setTimeout(resolve, WRONG_PASSWORD_DELAY_MS));
     return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
   }
 
   const res = NextResponse.json({ ok: true });
-  // Store SHA-256(ADMIN_PASSWORD) — middleware re-derives this from env to verify
-  res.cookies.set(ADMIN_COOKIE, correctHash, {
+  // A signed, expiring session; see src/lib/admin-session.ts.
+  res.cookies.set(ADMIN_COOKIE, await issueAdminSession(adminPw), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: COOKIE_MAX_AGE,
+    maxAge: ADMIN_SESSION_SECONDS,
     path: "/",
   });
+  return res;
+}
+
+/** Log out: forget the session in this browser. */
+export async function DELETE() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(ADMIN_COOKIE, "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
   return res;
 }

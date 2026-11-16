@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 function LoginForm() {
@@ -10,7 +10,6 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
-  const router = useRouter();
   const params = useSearchParams();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -26,7 +25,11 @@ function LoginForm() {
     if (res.ok) {
       const next = params.get("next") ?? "";
       // Only ever a page on this site, never another address.
-      router.push(/^\/(?!\/)[^\\]*$/.test(next) ? next : "/admin");
+      const target = /^\/(?!\/)[^\\]*$/.test(next) ? next : "/admin";
+      // A full page load, not router.push: the router may already hold a
+      // prefetched answer for the admin pages from before the cookie existed
+      // (a redirect back here), and would follow that instead of asking again.
+      window.location.assign(target);
     } else {
       setError("Incorrect password.");
     }

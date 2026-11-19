@@ -85,7 +85,8 @@ function SlotEditor({ slot, facilitators, onSaved }: { slot: Slot; facilitators:
       }),
     });
     setSaving(false);
-    setMessage(res.ok ? "Saved" : "Could not save");
+    const data = await res.json().catch(() => ({}));
+    setMessage(res.ok ? (data.note ? `Saved. ${data.note}` : "Saved") : "Could not save");
     if (res.ok) onSaved();
   }
 
@@ -177,7 +178,11 @@ function SlotEditor({ slot, facilitators, onSaved }: { slot: Slot; facilitators:
         {form.bookable && missing.length > 0 && (
           <span className="mr-auto text-xs text-amber-700">Applicants will see this slot without: {missing.join(", ")}.</span>
         )}
-        {message && <span className={`text-sm ${message === "Saved" ? "text-teal-700" : "text-red-600"}`}>{message}</span>}
+        {message && (
+          <span className={`text-sm ${message === "Saved" ? "text-teal-700" : message.startsWith("Saved") ? "text-amber-700" : "text-red-600"}`}>
+            {message}
+          </span>
+        )}
         <button type="button" onClick={save} disabled={saving} className="btn-pill btn-pill-primary h-9 px-4 text-sm disabled:opacity-50">
           {saving ? "Saving…" : "Save slot"}
         </button>

@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, ensureMigrated, lessonResponses, lessonProgress } from "@/db";
 import { getCurrentParticipant } from "@/lib/auth";
 import { newId } from "@/lib/ids";
+import { getLessonById } from "@/lib/lessons";
 import { and, eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
@@ -39,6 +40,10 @@ export async function POST(req: NextRequest) {
     const { lessonId, answers } = body;
     if (!lessonId || !answers || typeof answers !== "object") {
       return NextResponse.json({ error: "lessonId and answers required" }, { status: 400 });
+    }
+    // Only real lessons: otherwise anyone signed in could fill the table with junk rows.
+    if (!getLessonById(lessonId)) {
+      return NextResponse.json({ error: "Unknown lesson" }, { status: 404 });
     }
 
     const entries = Object.entries(answers).filter(([, v]) => v != null && String(v).trim() !== "");

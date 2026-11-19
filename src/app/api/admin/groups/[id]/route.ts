@@ -47,7 +47,30 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
 
+  const [group] = await db.select({ id: groups.id }).from(groups).where(eq(groups.id, id)).limit(1);
+  if (!group) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   await db.update(groups).set(update).where(eq(groups.id, id));
+
+  // The facilitator chosen for a slot should also be in that group (participants.groupId),
+  // otherwise they can't open its chat, overview or discussion. A facilitator has one
+  // group at a time, so someone already leading another group is left as they are.
+  let facilitatorNote: string | undefined;
+  if (typeof update.facilitatorId === "string") {
+    const [fac] = await db
+      .select({ id: participants.id, groupId: participants.groupId })
+      .from(participants)
+      .where(eq(participants.id, update.facilitatorId))
+      .limit(1);
+    if (fac && !fac.groupId) {
+      await db.update(participants).set({ groupId: id }).where(eq(participants.id, fac.id));
+    } else if (fac && fac.groupId !== id) {
+      facilitatorNote = "This facilitator is still assigned to another group; move them in Form Groups if they should lead this one.";
+    }
+  }
+  if (facilitatorNote) return NextResponse.json({ ok: true, note: facilitatorNote });
   return NextResponse.json({ ok: true });
 }
 

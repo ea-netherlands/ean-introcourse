@@ -23,11 +23,26 @@ export async function PATCH(req: NextRequest, { params }: Context) {
 
   const update: Record<string, unknown> = {};
   if ("groupId" in body) update.groupId = body.groupId || null;
-  if ("status" in body) update.status = body.status;
-  if ("role" in body) update.role = body.role;
+  if ("status" in body) {
+    if (!["pending", "active", "completed"].includes(body.status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+    update.status = body.status;
+  }
+  if ("role" in body) {
+    if (!["participant", "facilitator", "admin"].includes(body.role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+    update.role = body.role;
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+  }
+
+  const [existing] = await db.select({ id: participants.id }).from(participants).where(eq(participants.id, id)).limit(1);
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   await db.update(participants).set(update).where(eq(participants.id, id));

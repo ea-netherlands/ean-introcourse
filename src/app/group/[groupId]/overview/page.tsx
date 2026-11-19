@@ -16,7 +16,8 @@ import {
   lessonResponses,
 } from "@/db";
 import { eq, inArray, and, gte } from "drizzle-orm";
-import { WEEK_DEFS, getLessonById } from "@/lib/lessons";
+import { WEEK_DEFS, getLessonById, getWeekByLessonId } from "@/lib/lessons";
+import { recentCohortComments } from "@/lib/comments";
 import { QUIZ_ANSWERS } from "@/lib/quiz-answers";
 import { parseQuizHtml, hasQuizHtml } from "@/lib/quiz-parser";
 
@@ -194,6 +195,13 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
     return l === "nl" ? "🇳🇱 NL" : l === "en" ? "🇬🇧 EN" : "🌐 both";
   };
 
+  // Latest lesson comments in this group's cohort (same key as src/lib/comments.ts).
+  const cohortKey = group.cohort?.trim() || `group:${group.id}`;
+  const recentComments = (await recentCohortComments([cohortKey], 15)).map((c) => {
+    const week = getWeekByLessonId(c.lessonId);
+    return { ...c, lessonTitle: getLessonById(c.lessonId)?.title ?? "Lesson", href: week ? `/materials/${week.slug}/${c.lessonId}#discussion-title` : null };
+  });
+
   return (
     <div className="min-h-screen graph-paper">
       <SiteHeader user={{ name: me.name, role: me.role, groupId: me.groupId }} />
@@ -261,6 +269,38 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
             ))}
           </section>
         )}
+
+        {/* Recent lesson comments in the cohort */}
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--text-muted)" }}>
+            Recent lesson comments{group.cohort ? ` · ${group.cohort}` : ""}
+          </h2>
+          {recentComments.length === 0 ? (
+            <p className="card-ean px-5 py-4 text-sm" style={{ color: "var(--text-muted)" }}>
+              No comments yet. They appear here as soon as someone in the cohort writes under a lesson.
+            </p>
+          ) : (
+            <ul className="card-ean divide-y" style={{ borderColor: "var(--border)" }}>
+              {recentComments.map((c) => (
+                <li key={c.id} className="px-5 py-3" style={{ borderColor: "var(--border)" }}>
+                  <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
+                    <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{c.name}</span>
+                    <span style={{ color: "var(--text-muted)" }}>{c.parentId ? "replied on" : "commented on"}</span>
+                    {c.href ? (
+                      <Link href={c.href} className="font-medium text-ea-teal hover:underline">{c.lessonTitle}</Link>
+                    ) : (
+                      <span>{c.lessonTitle}</span>
+                    )}
+                    <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>
+                      {new Date(c.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-sm" style={{ color: "var(--text-secondary)" }}>{c.content}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         {/* Students */}
         <section>

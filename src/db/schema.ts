@@ -349,3 +349,27 @@ export const emailLog = pgTable("email_log", {
   delivered: boolean("delivered").notNull().default(false),
   sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ---------- lesson_comments ----------
+// Comments under a lesson, visible to everyone in the same cohort (see src/lib/comments.ts).
+
+export const lessonComments = pgTable(
+  "lesson_comments",
+  {
+    id: text("id").primaryKey(),
+    lessonId: text("lesson_id").notNull(),
+    cohort: text("cohort").notNull(),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => participants.id, { onDelete: "cascade" }),
+    parentId: text("parent_id"), // reply to another comment (FK with ON DELETE CASCADE in SQL)
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("lc_lesson_cohort_idx").on(t.lessonId, t.cohort, t.createdAt),
+    index("lc_cohort_created_idx").on(t.cohort, t.createdAt),
+  ]
+);

@@ -13,6 +13,7 @@ import { parseExerciseHtml } from "@/lib/exercise-parser";
 import { LessonProgressTracker } from "@/components/lesson-progress-tracker";
 import { QuizForm } from "@/components/quiz-form";
 import { InterleaveExerciseForm } from "@/components/interleave-exercise-form";
+import { LessonComments } from "@/components/lesson-comments";
 
 // ── Static params ─────────────────────────────────────────────────────────────
 
@@ -256,6 +257,11 @@ export default async function LessonPage({
           )}
         </div>
       </article>
+
+      {/* Cohort-wide discussion, as its own card under the lesson */}
+      <div className="mt-6">
+        <LessonComments lessonId={lessonId} />
+      </div>
     </main>
   );
 }

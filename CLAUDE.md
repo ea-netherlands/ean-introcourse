@@ -99,7 +99,7 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 - Migrations are **hand-written** SQL in `drizzle/NNNN_*.sql` (`drizzle-kit generate` needs a TTY).
   Separate statements with `--> statement-breakpoint`; prefer `ADD COLUMN IF NOT EXISTS`.
   Every file **must** also be added by hand to `drizzle/meta/_journal.json` or it is silently skipped.
-- Existing: 0000–0009 (`0008_group_timing`, `0009_application_study_field`). Ignore the stray
+- Existing: 0000–0010 (`0008_group_timing`, `0009_application_study_field`, `0010_lesson_comments`). Ignore the stray
   `0000_new_the_fallen.sql` (not in the journal). Production build runs `db:migrate` first.
 - `ensureMigrated()` caches per process → **restart the dev server after adding a migration**.
 - PGlite allows **one process**: stop the dev server before `npm run db:migrate`.
@@ -142,6 +142,12 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   score + explanations) and exercises; answers saved via `/api/exercises/submit` →
   `lesson_responses`. `/account` (profile, upcoming sessions + calendar links), `/chat`
   (General + My group), `/group/[groupId]`.
+- **Lesson comments:** a "Discussion" card under every lesson (`src/components/lesson-comments.tsx`,
+  API `/api/lessons/[lessonId]/comments[/commentId]`, table `lesson_comments`, migration 0010). Shared by the
+  whole **cohort** (`groups.cohort`; a group without a cohort label is its own cohort), one level of
+  replies, no notification emails (owner's choice). Delete: author, facilitator in the cohort, or role
+  admin. Facilitators also see the latest cohort comments on `/group/[groupId]/overview`. Logic in
+  `src/lib/comments.ts`.
 - **Facilitator:** `/sessions` plan sessions (repeat 1–8 weeks, per-session descriptions,
   optional auto-created Google Meet); `/group/[groupId]/overview` student progress + answers.
 - **Admin:** `/admin` dashboard, applications (bulk accept/reject, delete), participants

@@ -42,6 +42,12 @@ with quizzes and exercises, facilitators plan weekly online sessions and follow 
   `dangerouslySetInnerHTML` in `src/app/materials/[slug]/[lessonId]/page.tsx`. There is no MDX
   pipeline — `content/modules/` does not exist; `src/lib/modules.ts` is vestigial (only its
   `ModuleFrontmatter` type is used). PDFs in `public/assets/files/`.
+- **Re-scraping Circle:** `scripts/circle-scraper/` (see its README). `scrape.js` drives the
+  user's own logged-in debug Chrome; `scrape-quiz-results.js` reads quiz questions plus Circle's
+  "Correct" verdicts from a finished quiz's results page (Circle's Nov 2026 layout no longer
+  exposes quiz questions to `scrape.js`). Last re-scrape 2026-11-19: 31 lessons and the week
+  titles changed; quizzes were unchanged, so their old HTML stays (the site's quiz parser expects
+  Circle's previous markup).
 - **Cron:** `vercel.json` → `/api/cron/daily` at 06:00 UTC, guarded by `CRON_SECRET`.
 
 ## Key paths
@@ -52,7 +58,7 @@ with quizzes and exercises, facilitators plan weekly online sessions and follow 
 | `src/db/index.ts` | DB connection (PGlite/Postgres dual mode), `ensureMigrated()` |
 | `src/lib/lessons.ts` | `WEEK_DEFS`: 5 weeks / 54 lessons (7/9/13/15/10); reads `content/lessons/` |
 | `src/lib/quiz-parser.ts`, `src/lib/exercise-parser.ts` | Parse quizzes/exercises out of Circle HTML at render time |
-| `src/lib/quiz-answers.ts` | Correct answers + explanations (16 quizzes) — **AI-inferred, owner should verify** |
+| `src/lib/quiz-answers.ts` | Correct answers + explanations (16 quizzes). 13 answers (quizzes 3644621, 3644695, 3779929, 3779931, 3779969) confirmed against Circle on 2026-11-19; the other 17 are still AI-inferred |
 | `src/lib/auth.ts` | Magic links, password login, session cookie, `getCurrentParticipant()` |
 | `src/lib/calendar.ts` | Google/Outlook/.ics links; `SESSION_DURATION_MINUTES = 75` |
 | `src/lib/email.ts` | `sendEmail()` wrapper (Resend + console fallback) |
@@ -164,7 +170,9 @@ One vocabulary everywhere: `src/lib/availability.ts` (`monday_1730`, `monday_193
    aren't reloaded on revisit; `/api/materials/complete` is a stub; unused
    `exercise-form.tsx`/`lesson-exercise-form.tsx`; facilitators have no availability of their own;
    lesson pages are readable without logging in.
-4. `quiz-answers.ts` was AI-inferred — owner should verify it.
+4. `quiz-answers.ts`: 17 answers in 11 quizzes are still AI-inferred (see Key paths) — owner
+   should verify them, e.g. by completing those quizzes on Circle and running
+   `scripts/circle-scraper/scrape-quiz-results.js`.
 5. Google login: researched (Auth.js), not built; recommendation was to keep magic links.
 
 Full chat exports from the original build live outside the repo

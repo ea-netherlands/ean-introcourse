@@ -17,7 +17,7 @@ const LESSONS_DIR = path.join(process.cwd(), "content", "lessons");
 export const WEEK_DEFS = [
   {
     slug: "week-1",
-    title: "Week 1: Reasoning Transparency & EA Foundations",
+    title: "Week 1: Reasoning transparency and the foundations of effective altruism",
     shortTitle: "Week 1",
     sectionId: "960136",
     lessonIds: [
@@ -32,7 +32,7 @@ export const WEEK_DEFS = [
   },
   {
     slug: "week-2",
-    title: "Week 2: Evidence-Based Giving & Cost-Effectiveness",
+    title: "Week 2: Measuring and comparing impact",
     shortTitle: "Week 2",
     sectionId: "960216",
     lessonIds: [
@@ -49,7 +49,7 @@ export const WEEK_DEFS = [
   },
   {
     slug: "week-3",
-    title: "Week 3: Reasoning Under Uncertainty & BOTECs",
+    title: "Week 3: Reasoning under uncertainty",
     shortTitle: "Week 3",
     sectionId: "994238",
     lessonIds: [
@@ -70,7 +70,7 @@ export const WEEK_DEFS = [
   },
   {
     slug: "week-4",
-    title: "Week 4: Cause Prioritisation & the ITN Framework",
+    title: "Week 4: Prioritising across causes",
     shortTitle: "Week 4",
     sectionId: "1010483",
     lessonIds: [
@@ -93,7 +93,7 @@ export const WEEK_DEFS = [
   },
   {
     slug: "week-5",
-    title: "Week 5: Your Impact Plan",
+    title: "Week 5: Your plan for impact",
     shortTitle: "Week 5",
     sectionId: "1046062",
     lessonIds: [

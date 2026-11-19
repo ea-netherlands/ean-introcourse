@@ -56,6 +56,12 @@ with quizzes and exercises, facilitators plan weekly online sessions and follow 
   `dangerouslySetInnerHTML` in `src/app/materials/[slug]/[lessonId]/page.tsx`. There is no MDX
   pipeline — `content/modules/` does not exist; `src/lib/modules.ts` is vestigial (only its
   `ModuleFrontmatter` type is used). PDFs in `public/assets/files/`.
+- **Re-scraping Circle:** `scripts/circle-scraper/` (see its README). `scrape.js` drives the
+  user's own logged-in debug Chrome; `scrape-quiz-results.js` reads quiz questions plus Circle's
+  "Correct" verdicts from a finished quiz's results page (Circle's Nov 2026 layout no longer
+  exposes quiz questions to `scrape.js`). Last re-scrape 2026-11-19: 31 lessons and the week
+  titles changed; quizzes were unchanged, so their old HTML stays (the site's quiz parser expects
+  Circle's previous markup).
 - **Cron:** `vercel.json` → `/api/cron/daily` at 06:00 UTC, guarded by `CRON_SECRET`.
 
 ## Key paths
@@ -66,7 +72,7 @@ with quizzes and exercises, facilitators plan weekly online sessions and follow 
 | `src/db/index.ts` | DB connection (PGlite/Postgres dual mode), `ensureMigrated()` |
 | `src/lib/lessons.ts` | `WEEK_DEFS`: 5 weeks / 54 lessons (7/9/13/15/10); reads `content/lessons/` |
 | `src/lib/quiz-parser.ts`, `src/lib/exercise-parser.ts` | Parse quizzes/exercises out of Circle HTML at render time |
-| `src/lib/quiz-answers.ts` | Correct answers + explanations (16 quizzes) — **AI-inferred, owner should verify** |
+| `src/lib/quiz-answers.ts` | Correct answers + explanations (16 quizzes). 13 answers (quizzes 3644621, 3644695, 3779929, 3779931, 3779969) confirmed against Circle on 2026-11-19; the other 17 are still AI-inferred |
 | `src/lib/auth.ts` | Magic links, password login, session cookie, `getCurrentParticipant()` |
 | `src/lib/calendar.ts` | Google/Outlook/.ics links; `SESSION_DURATION_MINUTES = 75` |
 | `src/lib/email.ts` | `sendEmail()` wrapper (Resend + console fallback) |
@@ -93,7 +99,7 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 - Migrations are **hand-written** SQL in `drizzle/NNNN_*.sql` (`drizzle-kit generate` needs a TTY).
   Separate statements with `--> statement-breakpoint`; prefer `ADD COLUMN IF NOT EXISTS`.
   Every file **must** also be added by hand to `drizzle/meta/_journal.json` or it is silently skipped.
-- Existing: 0000–0009 (`0008_group_timing`, `0009_application_study_field`). Ignore the stray
+- Existing: 0000–0010 (`0008_group_timing`, `0009_application_study_field`, `0010_lesson_comments`). Ignore the stray
   `0000_new_the_fallen.sql` (not in the journal). Production build runs `db:migrate` first.
 - `ensureMigrated()` caches per process → **restart the dev server after adding a migration**.
 - PGlite allows **one process**: stop the dev server before `npm run db:migrate`.
@@ -106,18 +112,22 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 
 ## Auth
 
-- Participants/facilitators: magic link (`/auth/login` → `/api/auth/send-link`; never reveals
-  whether an email exists; tokens SHA-256 hashed, 30 min, single use) or password
+- Participants/facilitators: magic link (`/auth/login` → `/api/auth/send-link`; tokens SHA-256
+  hashed, 30 min, single use) or password
   (`/api/auth/password-login`). Cookie `ean_fellowship_session`, 7 days.
-- Accounts with status `pending` cannot sign in by either method (send-link silently skips them,
+- `/api/auth/send-link` answers `{ ok, status }` with `sent`, `unknown`, `pending` or
+  `rate_limited`, and the login page explains each one ("your email is not yet known to us… apply
+  here"). Revealing that an address is unknown is a deliberate choice by the programme team.
+- Accounts with status `pending` cannot sign in by either method (no link is sent, and
   `/auth/verify` re-checks). Magic links are rate-limited to 3 per address per 15 min (counted in
   `email_log`).
 - Facilitators sign up at `/facilitator/signup` (status pending) and need admin approval
   (status → active) before they can log in. Admins can also add them at `/admin/facilitators`.
 - Group pages/APIs use `canAccessGroup()` (`src/lib/auth.ts`): you only see the group in your own
   `participants.groupId`; role `admin` sees all. Facilitators are assigned to a group the same way.
-- Admin: one shared password from `ADMIN_PASSWORD`; cookie `ean_admin_auth` = SHA-256 of it.
-  `src/middleware.ts` (Edge runtime — use Web Crypto, not `node:crypto`) protects `/admin/*`
+- Admin: one shared password from `ADMIN_PASSWORD`; the cookie `ean_admin_session` is a signed,
+  8-hour session made and checked in `src/lib/admin-session.ts` (Web Crypto, so it also runs in
+  middleware); `DELETE /api/admin/auth` logs out. `src/middleware.ts` protects `/admin/*`
   and `/api/admin/*` (401 JSON), except `/api/admin/auth` and `/api/admin/forgot-password`.
   `POST /api/admin/sessions` is also open to active facilitators; the route checks that itself.
 - An early admin password was hardcoded and is in git history — production must use a different one.
@@ -132,6 +142,12 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   score + explanations) and exercises; answers saved via `/api/exercises/submit` →
   `lesson_responses`. `/account` (profile, upcoming sessions + calendar links), `/chat`
   (General + My group), `/group/[groupId]`.
+- **Lesson comments:** a "Discussion" card under every lesson (`src/components/lesson-comments.tsx`,
+  API `/api/lessons/[lessonId]/comments[/commentId]`, table `lesson_comments`, migration 0010). Shared by the
+  whole **cohort** (`groups.cohort`; a group without a cohort label is its own cohort), one level of
+  replies, no notification emails (owner's choice). Delete: author, facilitator in the cohort, or role
+  admin. Facilitators also see the latest cohort comments on `/group/[groupId]/overview`. Logic in
+  `src/lib/comments.ts`.
 - **Facilitator guide:** `/facilitator-guide` (active facilitators and role admin only; "Guide" in their
   header nav) embeds James's living Google Doc via its `/preview` URL, plus open/PDF links. Doc id in
   `src/lib/facilitator-guide.ts`, overridable with `FACILITATOR_GUIDE_DOC_ID`. The doc is shared
@@ -182,7 +198,9 @@ One vocabulary everywhere: `src/lib/availability.ts` (`monday_1730`, `monday_193
    aren't reloaded on revisit; `/api/materials/complete` is a stub; unused
    `exercise-form.tsx`/`lesson-exercise-form.tsx`; facilitators have no availability of their own;
    lesson pages are readable without logging in.
-4. `quiz-answers.ts` was AI-inferred — owner should verify it.
+4. `quiz-answers.ts`: 17 answers in 11 quizzes are still AI-inferred (see Key paths) — owner
+   should verify them, e.g. by completing those quizzes on Circle and running
+   `scripts/circle-scraper/scrape-quiz-results.js`.
 5. Google login: researched (Auth.js), not built; recommendation was to keep magic links.
 
 Full chat exports from the original build live outside the repo

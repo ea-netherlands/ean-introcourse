@@ -301,7 +301,14 @@ function LoginPageContent() {
           </div>
         )}
 
-        <p className="mt-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+        <p className="mt-6 text-center text-sm" style={{ color: "var(--text-secondary)" }}>
+          No account yet?{" "}
+          <Link href="/apply" className="font-medium text-ea-teal underline underline-offset-2 hover:opacity-80">
+            Apply here
+          </Link>
+        </p>
+
+        <p className="mt-2 text-center text-sm" style={{ color: "var(--text-muted)" }}>
           Questions?{" "}
           <a
             href="mailto:programmes@effectiefaltruisme.nl"

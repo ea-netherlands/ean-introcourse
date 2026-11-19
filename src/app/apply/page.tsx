@@ -5,6 +5,12 @@ import { TIMESLOTS } from "@/lib/availability";
 import { SlotPicker, type PublicSlot } from "@/components/slot-picker";
 import { PublicShell } from "@/components/public-shell";
 
+const MIN_MOTIVATION_WORDS = 10;
+/** Words as people count them; punctuation doesn't count as a word and isn't required. */
+function wordCount(text: string) {
+  return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+}
+
 // ── Constants matching Typeform exactly ──────────────────────────────
 
 const MAIN_REASONS = [
@@ -167,13 +173,15 @@ function ApplyPageContent() {
   }
 
   function canAdvance() {
-    if (step === 1) return mainReason.length >= 1 && promptedBy.trim().length >= 10;
+    // Only the rules shown on screen: an answer is needed, and the long answer needs 10 words.
+    // (Hidden character minimums used to make people add a full stop to unlock Continue.)
+    if (step === 1) return mainReason.length >= 1 && promptedBy.trim().length > 0;
     if (step === 2)
       return (
         educationLevel.length > 0 &&
         careerStage.length > 0 &&
         (isStudent ? studyField.length > 0 : occupation.length > 0 && workArea.length > 0) &&
-        motivation.trim().length >= 50
+        wordCount(motivation) >= MIN_MOTIVATION_WORDS
       );
     if (step === 3) {
       const scheduleOk = useSlots
@@ -476,8 +484,8 @@ function ApplyPageContent() {
                     className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors resize-none"
                     style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
                   />
-                  <p className="text-xs mt-1" style={{ color: motivation.split(/\s+/).filter(Boolean).length < 10 ? "#ef4444" : "var(--text-muted)" }}>
-                    {motivation.split(/\s+/).filter(Boolean).length} words (min. 10)
+                  <p className="text-xs mt-1" style={{ color: wordCount(motivation) < MIN_MOTIVATION_WORDS ? "#ef4444" : "var(--text-muted)" }}>
+                    {wordCount(motivation)} words (min. {MIN_MOTIVATION_WORDS})
                   </p>
                 </Field>
               </>

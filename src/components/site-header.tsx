@@ -27,6 +27,7 @@ function navItems(user: HeaderUser | null) {
   if (user.role === "facilitator" || user.role === "admin") {
     items.push({ href: "/sessions", label: "Sessions" });
     if (user.groupId) items.push({ href: `/group/${user.groupId}/overview`, label: "Overview" });
+    items.push({ href: "/facilitator-guide", label: "Guide" });
   }
   return items;
 }

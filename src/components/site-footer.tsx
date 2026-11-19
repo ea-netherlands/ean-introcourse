@@ -40,7 +40,7 @@ export function SiteFooter() {
           </Column>
           <Column title="EA Netherlands">
             <li><a href="https://effectiefaltruisme.nl/en" className={linkClass}>effectiefaltruisme.nl</a></li>
-            <li><a href="https://effectiefaltruisme.nl/privacy" className={linkClass}>Privacy</a></li>
+            <li><a href="https://effectiefaltruisme.nl/legal/privacy-policy" className={linkClass}>Privacy</a></li>
             <li><a href={`mailto:${CONTACT}`} className={`${linkClass} break-all`}>{CONTACT}</a></li>
           </Column>
         </div>

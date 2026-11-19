@@ -687,7 +687,7 @@ function ApplyPageContent() {
                     />
                     <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
                       I hereby grant EAN consent for the use of my personal data as described in the{" "}
-                      <a href="https://effectiefaltruisme.nl/privacy" target="_blank" rel="noreferrer" className="text-ea-teal underline">
+                      <a href="https://effectiefaltruisme.nl/legal/privacy-policy" target="_blank" rel="noreferrer" className="text-ea-teal underline">
                         privacy policy
                       </a>
                       . I am aware that I have the right to withdraw my consent at any moment.{" "}

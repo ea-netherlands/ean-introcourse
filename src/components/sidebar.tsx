@@ -80,6 +80,16 @@ export function Sidebar({ weeks }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <Link
+          href="/materials"
+          className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+          style={{
+            background: pathname === "/materials" ? "rgba(22,135,156,0.1)" : "transparent",
+            color: pathname === "/materials" ? "var(--color-ea-teal)" : "var(--text-secondary)",
+          }}
+        >
+          Start here
+        </Link>
 
         <p
           className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider"
@@ -205,9 +215,16 @@ export function MobileBar({ weeks }: SidebarProps) {
     <div
       className="card-ean flex h-12 items-center gap-3 px-4 lg:hidden"
     >
-      <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
-        Weeks
-      </span>
+      <Link
+        href="/materials"
+        className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors"
+        style={{
+          background: pathname === "/materials" ? "rgba(22,135,156,0.12)" : "transparent",
+          color: pathname === "/materials" ? "var(--color-ea-teal)" : "var(--text-muted)",
+        }}
+      >
+        Start here
+      </Link>
       <div className="ml-auto flex items-center gap-1 overflow-x-auto">
         {weeks.map((week) => {
           const isActive = pathname.startsWith(`/materials/${week.slug}`);

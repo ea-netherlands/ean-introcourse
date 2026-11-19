@@ -3,5 +3,5 @@
   "private": true,
   "description": "Scrapes the Intro Course lessons from Circle using your own logged-in Chrome. See README.md.",
   "scripts": { "scrape": "node scrape.js" },
-  "dependencies": { "puppeteer-core": "24.x" }
+  "dependencies": { "puppeteer-core": "25.x" }
 }

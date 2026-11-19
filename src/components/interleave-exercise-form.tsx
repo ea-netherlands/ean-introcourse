@@ -8,7 +8,7 @@
  * not all at the bottom of the page.
  */
 
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import type { ExerciseSection } from "@/lib/exercise-parser";
 
 interface Props {
@@ -19,6 +19,17 @@ interface Props {
 export function InterleaveExerciseForm({ lessonId, sections }: Props) {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // Signed-out readers can still write answers; they are kept in this browser only.
+  const [localOnly, setLocalOnly] = useState(false);
+  const storageKey = `exercise_answers_${lessonId}`;
+
+  // Restore answers written earlier in this browser (signed out, or not yet saved).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) setAnswers((prev) => ({ ...JSON.parse(saved), ...prev }));
+    } catch {}
+  }, [storageKey]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -29,7 +40,9 @@ export function InterleaveExerciseForm({ lessonId, sections }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lessonId, answers }),
       });
-      if (!res.ok) throw new Error();
+      try { localStorage.setItem(storageKey, JSON.stringify(answers)); } catch {}
+      if (res.status === 401) setLocalOnly(true);
+      else if (!res.ok) throw new Error();
       // Mark lesson complete in localStorage so the sidebar updates
       try { localStorage.setItem(`lesson_progress_${lessonId}`, "100"); } catch {}
       setStatus("saved");
@@ -88,7 +101,7 @@ export function InterleaveExerciseForm({ lessonId, sections }: Props) {
         </button>
         {status === "saved" && (
           <span className="text-sm font-medium" style={{ color: "#22c55e" }}>
-            Saved ✓
+            {localOnly ? "Saved in this browser ✓" : "Saved ✓"}
           </span>
         )}
         {status === "error" && (
@@ -97,6 +110,13 @@ export function InterleaveExerciseForm({ lessonId, sections }: Props) {
           </span>
         )}
       </div>
+      {localOnly && (
+        <p className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--callout-bg)", border: "1px dashed var(--rule)", color: "var(--text-secondary)" }}>
+          You&apos;re not signed in, so they are only kept in this browser.{" "}
+          <a href="/auth/login" className="font-medium text-ea-teal underline underline-offset-2">Sign in</a> to save your progress
+          and share your answers with your facilitator.
+        </p>
+      )}
     </form>
   );
 }

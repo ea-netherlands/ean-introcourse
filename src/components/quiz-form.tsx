@@ -12,6 +12,8 @@ interface Props {
 export function QuizForm({ lessonId, questions }: Props) {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // Signed-out readers can still do the quiz; their answers just aren't stored on the server.
+  const [localOnly, setLocalOnly] = useState(false);
 
   if (questions.length === 0) return null;
 
@@ -42,7 +44,8 @@ export function QuizForm({ lessonId, questions }: Props) {
           ),
         }),
       });
-      if (!res.ok) throw new Error("Server error");
+      if (res.status === 401) setLocalOnly(true);
+      else if (!res.ok) throw new Error("Server error");
       // Also mark complete in localStorage for the sidebar
       try { localStorage.setItem(`lesson_progress_${lessonId}`, "100"); } catch {}
       setStatus("saved");
@@ -262,6 +265,13 @@ export function QuizForm({ lessonId, questions }: Props) {
       {status === "error" && (
         <p className="text-sm" style={{ color: "#ef4444" }}>
           Could not submit. Please try again.
+        </p>
+      )}
+      {localOnly && (
+        <p className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--callout-bg)", border: "1px dashed var(--rule)", color: "var(--text-secondary)" }}>
+          You&apos;re not signed in, so your answers are only kept in this browser.{" "}
+          <a href="/auth/login" className="font-medium text-ea-teal underline underline-offset-2">Sign in</a> to save your progress
+          and share your answers with your facilitator.
         </p>
       )}
     </form>

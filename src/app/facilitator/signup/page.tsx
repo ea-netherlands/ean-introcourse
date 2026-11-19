@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { PublicShell } from "@/components/public-shell";
 
-export default function FacilitatorSignupPage() {
+function FacilitatorSignupPageContent() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +32,7 @@ export default function FacilitatorSignupPage() {
 
   if (status === "done") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+      <div className="min-h-[60vh] flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
         <div className="max-w-sm text-center space-y-4">
           <div className="text-5xl">✅</div>
           <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Account created</h1>
@@ -47,10 +48,9 @@ export default function FacilitatorSignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-[60vh] flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
       <div className="max-w-sm w-full">
         <div className="mb-6 text-center">
-          <Link href="/"><span className="text-ea-teal text-2xl font-bold">◆</span></Link>
           <h1 className="text-xl font-bold mt-2" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
             Facilitator sign-up
           </h1>
@@ -81,7 +81,7 @@ export default function FacilitatorSignupPage() {
           <button
             type="submit"
             disabled={status === "sending"}
-            className="w-full rounded-xl py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="btn-pill btn-pill-primary w-full rounded-xl py-2.5 text-sm font-semibold text-white disabled:opacity-50"
             style={{ background: "var(--color-ea-teal)" }}
           >
             {status === "sending" ? "Creating account…" : "Create account"}
@@ -94,5 +94,13 @@ export default function FacilitatorSignupPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function FacilitatorSignupPage() {
+  return (
+    <PublicShell>
+      <FacilitatorSignupPageContent />
+    </PublicShell>
   );
 }

@@ -5,7 +5,6 @@
  * Admins see all groups.
  */
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { eq, desc, and } from "drizzle-orm";
 import {
   db,
@@ -15,7 +14,7 @@ import {
   participants,
 } from "@/db";
 import { getCurrentParticipant } from "@/lib/auth";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { SiteHeader } from "@/components/site-header";
 import { FacilitatorSessionForm } from "./facilitator-session-form";
 import { googleCalendarConfigured } from "@/lib/google-calendar";
 
@@ -74,39 +73,7 @@ export default async function SessionsPage() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
-      <header
-        className="flex h-14 items-center px-6 gap-4"
-        style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-sidebar)" }}
-      >
-        <Link href="/materials" className="flex items-center gap-2">
-          <span className="text-ea-teal font-bold">◆</span>
-          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Fellowship</span>
-        </Link>
-        <nav className="flex items-center gap-1 ml-4">
-          <Link href="/materials" className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Materials</Link>
-          <Link href="/account" className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>My account</Link>
-          {me.groupId && (
-            <Link href={`/group/${me.groupId}`} className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Group chat</Link>
-          )}
-          <span className="px-3 py-1.5 rounded-lg text-sm font-medium" style={{ background: "rgba(22,135,156,0.1)", color: "var(--color-ea-teal)" }}>
-            Sessions
-          </span>
-          {me.groupId && (
-            <Link href={`/group/${me.groupId}/overview`} className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Overview</Link>
-          )}
-        </nav>
-        <div className="ml-auto flex items-center gap-3">
-          <ThemeToggle />
-          {isAdmin && (
-            <Link href="/admin/sessions" className="text-xs px-3 py-1.5 rounded-lg border transition" style={{ color: "var(--text-muted)", borderColor: "var(--border)" }}>
-              Admin view →
-            </Link>
-          )}
-          <form action="/auth/logout" method="POST">
-            <button type="submit" className="text-xs px-3 py-1.5 rounded-lg transition" style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}>Sign out</button>
-          </form>
-        </div>
-      </header>
+      <SiteHeader user={{ name: me.name, role: me.role, groupId: me.groupId }} />
 
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-8">
         <div>

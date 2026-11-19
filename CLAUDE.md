@@ -36,6 +36,13 @@ with quizzes and exercises, facilitators plan weekly online sessions and follow 
 - **Styles:** Tailwind CSS v4 (no config file — `postcss.config.mjs` + `@theme`/`@utility` in
   `src/app/globals.css`) plus CSS variables (`--bg-page`, `--bg-card`, `--text-primary`,
   `--text-muted`, `--border`, `--color-ea-teal` = `#16879C`). Dark/light via `data-theme` on `<html>`.
+- **Look = effectiefaltruisme.nl** (repo `ea-netherlands/ean-website`, Chakra UI): stone (warm grey)
+  neutrals, which `globals.css` puts into the `slate-*` names so existing classes follow; EA teal;
+  Sentient headings. Shared chrome: `SiteHeader` (white, sticky, EAN logo, role-based nav, theme
+  toggle; `fullWidth` on lesson pages), `SiteFooter` (dark teal `--footer-bg`), `PublicShell`
+  (header + footer for login/apply/onboard/signup/graduated). Buttons: `btn-pill btn-pill-primary`
+  / `btn-pill-secondary` (16px radius). Logos in `public/images/logos/` (white variant shown in
+  dark mode via `.logo-light`/`.logo-dark`). Admin uses the logo and palette but stays plain.
 - **Fonts:** self-hosted Atkinson Hyperlegible Next (body) + Sentient (headings), `src/app/fonts.ts`
 - **Content:** scraped lesson JSON in `content/lessons/` (54 files,
   `{title, counter, url, html, images, files, videos, scrapedAt}`); `html` is injected via

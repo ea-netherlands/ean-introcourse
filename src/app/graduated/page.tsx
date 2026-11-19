@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { getCurrentParticipant } from "@/lib/auth";
+import { PublicShell } from "@/components/public-shell";
 
 export default async function GraduatedPage() {
   const participant = await getCurrentParticipant().catch(() => null);
 
   return (
+    <PublicShell user={participant ? { name: participant.name, role: participant.role, groupId: participant.groupId } : null}>
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6"
+      className="min-h-[60vh] flex flex-col items-center justify-center px-6 py-12"
       style={{ background: "var(--bg-page)" }}
     >
       <div
@@ -81,5 +83,6 @@ export default async function GraduatedPage() {
         any time.
       </p>
     </div>
+    </PublicShell>
   );
 }

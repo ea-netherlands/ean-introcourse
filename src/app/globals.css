@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   EAN design system tokens — EA Teal primary · Slate neutral
+   EAN design system tokens — EA Teal primary · Stone neutral (as effectiefaltruisme.nl)
    Fonts: Sentient (headings) + Atkinson Hyperlegible (body)
    ============================================================ */
 
@@ -19,18 +19,19 @@
   --color-teal-900: #062328;
   --color-teal-950: #031012;
 
-  /* Website-exact slate ramp */
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-400: #94a3b8;
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
+  /* Neutral ramp. The EAN website uses Chakra "stone" (warm grey); the slate-* names are
+     kept so existing classes keep working, but they now carry the stone values. */
+  --color-slate-50: #fafaf9;
+  --color-slate-100: #f5f5f4;
+  --color-slate-200: #e7e5e4;
+  --color-slate-300: #d6d3d1;
+  --color-slate-400: #a8a29e;
+  --color-slate-500: #78716c;
+  --color-slate-600: #57534e;
+  --color-slate-700: #44403c;
+  --color-slate-800: #292524;
+  --color-slate-900: #1c1917;
+  --color-slate-950: #0c0a09;
 
   /* EA brand alias — use bg-ea-teal, text-ea-teal, border-ea-teal etc. */
   --color-ea-teal: #16879c;
@@ -44,19 +45,19 @@
 /* ── Light mode (default) ───────────────────────────────────── */
 :root {
   --bg-page: #ffffff;
-  --bg-sidebar: #f8fafc;
-  --bg-card: #f1f5f9;
-  --border: #e2e8f0;
+  --bg-sidebar: #fafaf9;
+  --bg-card: #fafaf9;
+  --border: #e7e5e4;
 
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
+  --text-primary: #1c1917;
+  --text-secondary: #44403c;
+  --text-muted: #57534e;
 
-  --prose-heading: #0f172a;
-  --prose-body: #1e293b;
+  --prose-heading: #1c1917;
+  --prose-body: #292524;
   --prose-link: #16879c;
   --prose-link-hover: #106574;
-  --prose-strong: #0f172a;
+  --prose-strong: #1c1917;
 
   --teal-callout-bg: #f0fafb;
   --teal-callout-border: #aae8f3;
@@ -82,20 +83,20 @@
 /* Applies when system prefers dark AND no explicit override */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-page: #020617;
-    --bg-sidebar: #0f172a;
-    --bg-card: #1e293b;
-    --border: #334155;
+    --bg-page: #0c0a09;
+    --bg-sidebar: #1c1917;
+    --bg-card: #1c1917;
+    --border: #44403c;
 
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
+    --text-primary: #fafaf9;
+    --text-secondary: #d6d3d1;
+    --text-muted: #a8a29e;
 
-    --prose-heading: #f1f5f9;
-    --prose-body: #cbd5e1;
+    --prose-heading: #fafaf9;
+    --prose-body: #d6d3d1;
     --prose-link: #43cce5;
     --prose-link-hover: #74daeb;
-    --prose-strong: #f8fafc;
+    --prose-strong: #fafaf9;
 
     --teal-callout-bg: #031012;
     --teal-callout-border: #106574;
@@ -104,20 +105,20 @@
 
 /* Applies when user explicitly chose dark */
 :root[data-theme="dark"] {
-  --bg-page: #020617;
-  --bg-sidebar: #0f172a;
-  --bg-card: #1e293b;
-  --border: #334155;
+  --bg-page: #0c0a09;
+  --bg-sidebar: #1c1917;
+  --bg-card: #1c1917;
+  --border: #44403c;
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-primary: #fafaf9;
+  --text-secondary: #d6d3d1;
+  --text-muted: #a8a29e;
 
-  --prose-heading: #f1f5f9;
-  --prose-body: #cbd5e1;
+  --prose-heading: #fafaf9;
+  --prose-body: #d6d3d1;
   --prose-link: #43cce5;
   --prose-link-hover: #74daeb;
-  --prose-strong: #f8fafc;
+  --prose-strong: #fafaf9;
 
   --teal-callout-bg: #031012;
   --teal-callout-border: #106574;
@@ -134,8 +135,12 @@ h1,
 h2,
 h3 {
   font-family: var(--font-serif);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0;
+}
+
+h1 {
+  font-weight: 700;
 }
 
 /* ── Button variants ────────────────────────────────────────── */
@@ -284,4 +289,55 @@ select option {
 @media print {
   .no-print { display: none !important; }
   body { background: #fff; color: #000; }
+}
+
+/* ── EAN website chrome (header, footer, pill buttons) ──────── */
+:root {
+  --header-bg: #ffffff;
+  --footer-bg: #0b424c; /* ea_teal 800, as the effectiefaltruisme.nl footer */
+  --footer-text: #dbf5fa; /* ea_teal 100 */
+}
+:root[data-theme="dark"] {
+  --header-bg: #0c0a09;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --header-bg: #0c0a09;
+  }
+}
+
+/* Primary and secondary pill buttons, as on effectiefaltruisme.nl (16px radius). */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background-color 150ms, box-shadow 150ms, transform 150ms;
+}
+.btn-pill:active { transform: translateY(1px); }
+.btn-pill-primary {
+  background: #16879c;
+  color: #fff;
+  box-shadow: var(--btn-solid-shadow);
+}
+.btn-pill-primary:hover { background: #106574; box-shadow: var(--btn-solid-shadow-hover); }
+.btn-pill-secondary {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  box-shadow: var(--btn-subtle-shadow);
+}
+.btn-pill-secondary:hover { background: var(--bg-sidebar); }
+
+/* Coloured logo in light mode, white logo in dark mode. */
+.logo-dark { display: none; }
+:root[data-theme="dark"] .logo-light { display: none; }
+:root[data-theme="dark"] .logo-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-light { display: none; }
+  :root:not([data-theme="light"]) .logo-dark { display: block; }
 }

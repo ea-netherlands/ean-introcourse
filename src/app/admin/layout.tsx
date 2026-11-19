@@ -1,18 +1,17 @@
 import Link from "next/link";
-import Image from "next/image";
 
 /**
- * Admin layout — shared shell for all /admin/* pages.
- * Stage 1: no authentication guard (add in Stage 2 once magic links are wired).
+ * Admin layout — shared shell for all /admin/* pages (guarded by src/middleware.ts).
+ * Same EAN logo and warm-grey palette as the rest of the site, but kept plain.
  */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-6">
-          <Link href="/admin" className="flex items-center gap-2">
-            <Image src="/ean-logo-mark.svg" alt="EAN" width={24} height={24} />
-            <span className="font-serif text-slate-700 text-sm">Admin</span>
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-6">
+          <Link href="/admin" className="flex shrink-0 items-center gap-3">
+            <img src="/images/logos/ean-logo.svg" alt="Effectief Altruïsme Nederland" className="h-9 w-auto" />
+            <span className="border-l border-slate-200 pl-3 font-serif text-base font-semibold text-slate-800">Admin</span>
           </Link>
           <nav className="flex items-center gap-1 flex-wrap">
             {[
@@ -41,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
         </div>
       </header>
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">{children}</main>
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">{children}</main>
     </div>
   );
 }

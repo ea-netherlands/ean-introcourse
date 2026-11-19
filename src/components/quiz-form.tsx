@@ -249,7 +249,7 @@ export function QuizForm({ lessonId, questions }: Props) {
           <button
             type="submit"
             disabled={status === "saving" || Object.keys(answers).length === 0}
-            className="rounded-lg bg-ea-teal px-5 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="btn-pill btn-pill-primary rounded-lg bg-ea-teal px-5 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             {status === "saving" ? "Submitting…" : "Submit answers"}
           </button>

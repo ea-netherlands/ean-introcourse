@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ThemeToggle } from "./theme-toggle";
 import { UserChip } from "./auth-banner";
 import type { SidebarWeek } from "@/lib/lessons";
 
@@ -76,23 +75,8 @@ export function Sidebar({ weeks, participant }: SidebarProps) {
   };
 
   return (
-    <aside className="sidebar hidden lg:flex w-72 shrink-0 flex-col">
-      {/* Header */}
-      <div
-        className="flex h-16 items-center justify-between px-5"
-        style={{ borderBottom: "1px solid var(--border)" }}
-      >
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-ea-teal text-xl font-bold">◆</span>
-          <span
-            className="text-sm font-semibold"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Fellowship
-          </span>
-        </Link>
-        <ThemeToggle />
-      </div>
+    // Logo and theme toggle live in the SiteHeader above; the sidebar sticks below it.
+    <aside className="sidebar sticky top-[68px] hidden h-[calc(100vh-68px)] w-72 shrink-0 flex-col lg:flex">
 
       {/* User name bar — shown at top when logged in */}
       {participant && (
@@ -319,12 +303,9 @@ export function MobileBar({ weeks }: SidebarProps) {
       className="lg:hidden flex h-14 items-center px-4 gap-3"
       style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-sidebar)" }}
     >
-      <Link href="/" className="flex items-center gap-2">
-        <span className="text-ea-teal text-lg font-bold">◆</span>
-        <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-          Fellowship
-        </span>
-      </Link>
+      <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+        Weeks
+      </span>
       <div className="ml-auto flex items-center gap-1 overflow-x-auto">
         {weeks.map((week) => {
           const isActive = pathname.startsWith(`/materials/${week.slug}`);
@@ -342,7 +323,6 @@ export function MobileBar({ weeks }: SidebarProps) {
             </Link>
           );
         })}
-        <ThemeToggle />
       </div>
     </div>
   );

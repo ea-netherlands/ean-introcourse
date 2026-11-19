@@ -28,7 +28,7 @@ export function AuthBanner({ hidden }: Props) {
       </span>
       <Link
         href="/auth/login"
-        className="shrink-0 rounded-lg bg-ea-teal px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
+        className="btn-pill btn-pill-primary shrink-0 rounded-lg bg-ea-teal px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
       >
         Sign in
       </Link>

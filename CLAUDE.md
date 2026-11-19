@@ -148,6 +148,10 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   replies, no notification emails (owner's choice). Delete: author, facilitator in the cohort, or role
   admin. Facilitators also see the latest cohort comments on `/group/[groupId]/overview`. Logic in
   `src/lib/comments.ts`.
+- **Facilitator guide:** `/facilitator-guide` (active facilitators and role admin only; "Guide" in their
+  header nav) embeds James's living Google Doc via its `/preview` URL, plus open/PDF links. Doc id in
+  `src/lib/facilitator-guide.ts`, overridable with `FACILITATOR_GUIDE_DOC_ID`. The doc is shared
+  "anyone with the link", so the page hides the link but the doc itself is not secret.
 - **Facilitator:** `/sessions` plan sessions (repeat 1–8 weeks, per-session descriptions,
   optional auto-created Google Meet); `/group/[groupId]/overview` student progress + answers.
 - **Admin:** `/admin` dashboard, applications (bulk accept/reject, delete), participants

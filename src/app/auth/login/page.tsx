@@ -1,10 +1,59 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import { PublicShell } from "@/components/public-shell";
 
 type Tab = "magic" | "password";
+
+const CONTACT_EMAIL = "programmes@effectiefaltruisme.nl";
+
+/** Why no sign-in email was sent (from /api/auth/send-link or /auth/verify). */
+type Notice = "unknown" | "pending" | "rate_limited" | "invalid_link" | null;
+
+function NoticeBox({ notice }: { notice: Exclude<Notice, null> }) {
+  const mail = (
+    <a href={`mailto:${CONTACT_EMAIL}`} className="underline" style={{ color: "var(--color-ea-teal)" }}>
+      {CONTACT_EMAIL}
+    </a>
+  );
+  const body = {
+    unknown: (
+      <>
+        Your email address is not yet known to us. Please use the same email address as in your
+        application, or{" "}
+        <Link href="/apply" className="underline font-medium" style={{ color: "var(--color-ea-teal)" }}>
+          apply here
+        </Link>
+        .
+      </>
+    ),
+    pending: (
+      <>
+        Your registration isn&apos;t complete yet. Use the &ldquo;Complete registration&rdquo; link in your
+        acceptance email. Facilitators: your account still needs approval. Questions? Email {mail}.
+      </>
+    ),
+    rate_limited: (
+      <>
+        We&apos;ve already sent you several sign-in links in the last 15 minutes. Please check your inbox
+        and spam folder, or try again later.
+      </>
+    ),
+    invalid_link: (
+      <>This sign-in link has expired or was already used. Enter your email to get a new one.</>
+    ),
+  }[notice];
+  return (
+    <div
+      role="status"
+      className="rounded-lg px-3 py-2.5 text-sm"
+      style={{ background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.45)", color: "var(--text-primary)" }}
+    >
+      {body}
+    </div>
+  );
+}
 
 function LoginPageContent() {
   const [tab, setTab] = useState<Tab>("magic");
@@ -13,6 +62,14 @@ function LoginPageContent() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [notice, setNotice] = useState<Notice>(null);
+
+  // /auth/verify redirects here with ?error=… when a link can't be used.
+  useEffect(() => {
+    const err = new URLSearchParams(window.location.search).get("error");
+    if (err === "pending") setNotice("pending");
+    else if (err === "invalid" || err === "missing") setNotice("invalid_link");
+  }, []);
 
   // --- Password state ---
   const [pwEmail, setPwEmail] = useState("");
@@ -24,6 +81,7 @@ function LoginPageContent() {
     e.preventDefault();
     setStatus("sending");
     setErrorMsg("");
+    setNotice(null);
     try {
       const res = await fetch("/api/auth/send-link", {
         method: "POST",
@@ -34,6 +92,9 @@ function LoginPageContent() {
       if (!res.ok) {
         setErrorMsg(data.error ?? "Something went wrong.");
         setStatus("error");
+      } else if (data.status === "unknown" || data.status === "pending" || data.status === "rate_limited") {
+        setNotice(data.status);
+        setStatus("idle");
       } else {
         setStatus("sent");
       }
@@ -111,7 +172,7 @@ function LoginPageContent() {
                 <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
                   We sent a sign-in link to{" "}
                   <strong style={{ color: "var(--text-primary)" }}>{email}</strong>.
-                  The link expires in 30 minutes.
+                  The link expires in 30 minutes. Not there after a few minutes? Check your spam folder.
                 </p>
                 <button
                   onClick={() => { setStatus("idle"); setEmail(""); }}
@@ -146,7 +207,7 @@ function LoginPageContent() {
                       type="email"
                       required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => { setEmail(e.target.value); setNotice(null); }}
                       placeholder="you@example.com"
                       className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none transition"
                       style={{
@@ -158,6 +219,8 @@ function LoginPageContent() {
                       onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
                     />
                   </div>
+
+                  {notice && <NoticeBox notice={notice} />}
 
                   {status === "error" && (
                     <p className="text-sm" style={{ color: "#ef4444" }}>{errorMsg}</p>

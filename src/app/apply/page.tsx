@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TIMESLOTS } from "@/lib/availability";
+import { SlotPicker, type PublicSlot } from "@/components/slot-picker";
 import { PublicShell } from "@/components/public-shell";
 
 // ── Constants matching Typeform exactly ──────────────────────────────
@@ -119,6 +120,24 @@ function ApplyPageContent() {
   const [availability, setAvailability] = useState<string[]>([]);
   const [availabilityOther, setAvailabilityOther] = useState("");
   const [onlinePreference, setOnlinePreference] = useState("");
+  // Slot booking: when slots are open, applicants pick slots instead of loose times.
+  const [slots, setSlots] = useState<PublicSlot[] | null>(null);
+  const [slotChoices, setSlotChoices] = useState<string[]>([]);
+  const [noneFit, setNoneFit] = useState(false);
+  const [noneFitText, setNoneFitText] = useState("");
+  async function loadSlots() {
+    const res = await fetch("/api/slots", { cache: "no-store" }).catch(() => null);
+    const data: PublicSlot[] = res && res.ok ? await res.json() : [];
+    setSlots(data);
+    // Drop choices that disappeared, and a 1st choice that is now full.
+    setSlotChoices((prev) => {
+      const byId = new Map(data.map((x) => [x.id, x]));
+      const kept = prev.filter((id) => byId.has(id));
+      return kept.length && byId.get(kept[0])?.full ? kept.slice(1) : kept;
+    });
+  }
+  useEffect(() => { loadSlots(); }, []);
+  const useSlots = (slots?.length ?? 0) > 0;
 
   // Step 4 — Details & consent
   const [name, setName] = useState("");
@@ -156,8 +175,12 @@ function ApplyPageContent() {
         (isStudent ? studyField.length > 0 : occupation.length > 0 && workArea.length > 0) &&
         motivation.trim().length >= 50
       );
-    if (step === 3)
-      return language.length > 0 && availability.length > 0 && onlinePreference.length > 0;
+    if (step === 3) {
+      const scheduleOk = useSlots
+        ? slotChoices.length > 0 || (noneFit && noneFitText.trim().length > 0)
+        : availability.length > 0;
+      return language.length > 0 && scheduleOk && onlinePreference.length > 0;
+    }
     return true;
   }
 
@@ -197,7 +220,13 @@ function ApplyPageContent() {
         workArea: isStudent ? null : resolveOther(workArea, workAreaOther),
         studyField: isStudent ? resolveOther(studyField, studyFieldOther) : null,
         language,
-        availability: resolveOtherSlots(availability, availabilityOther),
+        availability: useSlots
+          ? [
+              ...slotChoices.map((id) => slots?.find((x) => x.id === id)?.timing).filter((t): t is string => !!t),
+              ...(noneFit && noneFitText.trim() ? [`other: ${noneFitText.trim()}`] : []),
+            ]
+          : resolveOtherSlots(availability, availabilityOther),
+        slotChoices: useSlots ? slotChoices : [],
         onlinePreference,
         heardAbout: resolveOther(heardAbout, heardAboutOther) || null,
         privacyConsent,
@@ -209,6 +238,11 @@ function ApplyPageContent() {
       const j = await res.json().catch(() => ({}));
       setErrorMsg(j.error ?? "Something went wrong. Please try again.");
       setStatus("error");
+      // The chosen slot filled up or closed meanwhile: refresh and send them back to pick again.
+      if (j.code === "slot_full" || j.code === "slot_unavailable") {
+        await loadSlots();
+        setStep(3);
+      }
     }
   }
 
@@ -224,6 +258,13 @@ function ApplyPageContent() {
           <p className="text-base leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             Thank you, {name.split(" ")[0]}! We&apos;ve received your application and will be in touch soon.
           </p>
+          {useSlots && slotChoices[0] && (
+            <p className="card-ean px-4 py-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+              We&apos;ve reserved a place for you in your 1st choice:{" "}
+              <strong>{slots?.find((x) => x.id === slotChoices[0])?.timingLabel}</strong>. You&apos;ll also find this in
+              the confirmation email.
+            </p>
+          )}
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
             Questions? Email us at{" "}
             <a href="mailto:programmes@effectiefaltruisme.nl" className="text-ea-teal underline">
@@ -471,6 +512,19 @@ function ApplyPageContent() {
                   </div>
                 </Field>
 
+                {useSlots ? (
+                  <Field label="Which group would you like to join?" required hint="Pick up to 3, in order of preference">
+                    <SlotPicker
+                      slots={slots ?? []}
+                      choices={slotChoices}
+                      onChoicesChange={setSlotChoices}
+                      noneFit={noneFit}
+                      onNoneFitChange={setNoneFit}
+                      noneText={noneFitText}
+                      onNoneTextChange={setNoneFitText}
+                    />
+                  </Field>
+                ) : (
                 <Field label="Which time slots work for you?" required hint="Select all that apply">
                   <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
                     We recommend reserving these in your calendar now. We&apos;ll confirm 2–3 weeks before the course starts.
@@ -498,6 +552,7 @@ function ApplyPageContent() {
                     />
                   )}
                 </Field>
+                )}
 
                 <Field label="Do you prefer sessions online or in person?" required>
                   <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>

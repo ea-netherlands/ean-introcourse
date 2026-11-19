@@ -93,7 +93,8 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 - Migrations are **hand-written** SQL in `drizzle/NNNN_*.sql` (`drizzle-kit generate` needs a TTY).
   Separate statements with `--> statement-breakpoint`; prefer `ADD COLUMN IF NOT EXISTS`.
   Every file **must** also be added by hand to `drizzle/meta/_journal.json` or it is silently skipped.
-- Existing: 0000–0010 (`0008_group_timing`, `0009_application_study_field`, `0010_lesson_comments`). Ignore the stray
+- Existing: 0000–0011 (`0008_group_timing`, `0009_application_study_field`, `0010_lesson_comments`,
+  `0011_slot_booking`). Ignore the stray
   `0000_new_the_fallen.sql` (not in the journal). Production build runs `db:migrate` first.
 - `ensureMigrated()` caches per process → **restart the dev server after adding a migration**.
 - PGlite allows **one process**: stop the dev server before `npm run db:migrate`.
@@ -132,6 +133,14 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   score + explanations) and exercises; answers saved via `/api/exercises/submit` →
   `lesson_responses`. `/account` (profile, upcoming sessions + calendar links), `/chat`
   (General + My group), `/group/[groupId]`.
+- **Slot booking:** a slot is a group with `dates`, `facilitator_id`, `language`, `format` (+ `location`),
+  `capacity` and `bookable` (migration 0011). Admin sets them at `/admin/slots`. On `/apply` step 3
+  applicants pick up to 3 slots in order (`SlotPicker`); the **1st choice books a place immediately**
+  (`applications.slot_id`, claimed inside a transaction with `SELECT … FOR UPDATE` in
+  `src/lib/slots.ts`), 2nd/3rd are back-ups (`slot_choice_2/3`). "None of these times" stays possible.
+  Places taken = non-rejected applications with that slot_id, so rejecting/deleting frees the place.
+  Accepting puts the participant into the slot's group. With no bookable slots the form falls back to
+  the old time-slot question. Public list: `GET /api/slots`.
 - **Lesson comments:** a "Discussion" card under every lesson (`src/components/lesson-comments.tsx`,
   API `/api/lessons/[lessonId]/comments[/commentId]`, table `lesson_comments`, migration 0010). Shared by the
   whole **cohort** (`groups.cohort`; a group without a cohort label is its own cohort), one level of

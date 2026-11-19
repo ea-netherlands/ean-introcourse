@@ -21,6 +21,14 @@ export const groups = pgTable("groups", {
   timing: text("timing"), // "monday_1730" | "monday_1930" | "thursday_1730" | "thursday_1930"
   // When active=false the group is archived: participants become graduates, no new sessions
   active: boolean("active").default(true).notNull(),
+  // ── Slot booking (migration 0011): a group can be offered as a slot on /apply ──
+  dates: jsonb("dates").$type<string[]>(), // the session dates, "YYYY-MM-DD"
+  facilitatorId: text("facilitator_id"), // FK participants(id) ON DELETE SET NULL (in SQL)
+  language: text("language"), // "nl" | "en" | "both"
+  format: text("format"), // "online" | "hybrid" | "in_person"
+  location: text("location"), // address/city for hybrid or in-person slots
+  capacity: integer("capacity"), // places available to applicants
+  bookable: boolean("bookable").default(false).notNull(), // shown on /apply
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -209,6 +217,10 @@ export const applications = pgTable("applications", {
   status: text("status", { enum: ["pending", "accepted", "rejected"] })
     .notNull()
     .default("pending"),
+  // Slot booking (migration 0011): first choice holds a place; 2nd/3rd are back-ups.
+  slotId: text("slot_id"), // FK groups(id) ON DELETE SET NULL (in SQL)
+  slotChoice2: text("slot_choice_2"),
+  slotChoice3: text("slot_choice_3"),
   submittedAt: timestamp("submitted_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

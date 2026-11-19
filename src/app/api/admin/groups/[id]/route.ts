@@ -18,6 +18,20 @@ export async function PATCH(req: NextRequest, { params }: Context) {
   if ("name" in body && body.name?.trim()) update.name = body.name.trim();
   if ("cohort" in body) update.cohort = body.cohort || null;
   if ("timing" in body) update.timing = body.timing || null;
+  // Slot booking settings (see src/lib/slots.ts)
+  if ("dates" in body) {
+    const dates = Array.isArray(body.dates) ? body.dates.filter((d: unknown) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) : [];
+    update.dates = dates.length ? [...dates].sort() : null;
+  }
+  if ("facilitatorId" in body) update.facilitatorId = body.facilitatorId || null;
+  if ("language" in body) update.language = ["nl", "en", "both"].includes(body.language) ? body.language : null;
+  if ("format" in body) update.format = ["online", "hybrid", "in_person"].includes(body.format) ? body.format : null;
+  if ("location" in body) update.location = typeof body.location === "string" && body.location.trim() ? body.location.trim() : null;
+  if ("capacity" in body) {
+    const n = Number(body.capacity);
+    update.capacity = body.capacity === null || body.capacity === "" || !Number.isFinite(n) ? null : Math.max(0, Math.floor(n));
+  }
+  if ("bookable" in body) update.bookable = Boolean(body.bookable);
   if ("active" in body) {
     update.active = Boolean(body.active);
     // Deactivating a group graduates all its participants

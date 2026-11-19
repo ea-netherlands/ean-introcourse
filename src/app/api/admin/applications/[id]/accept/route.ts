@@ -5,6 +5,7 @@ import { newId } from "@/lib/ids";
 import { randomBytes, createHash } from "crypto";
 import { sendEmail, btn, escapeHtml } from "@/lib/email";
 import { appUrl } from "@/lib/url";
+import { describeSlot, getSlot } from "@/lib/slots";
 
 const TOKEN_DAYS = 7;
 
@@ -30,7 +31,10 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
     role: "participant",
     status: "pending",
     availability: Array.isArray(app.availability) ? (app.availability as string[]) : undefined,
+    // A booked slot is a group: accepting places the participant in it straight away.
+    groupId: app.slotId ?? undefined,
   });
+  const slot = await getSlot(app.slotId);
 
   // Mark application as accepted
   await db.update(applications).set({ status: "accepted" }).where(eq(applications.id, id));
@@ -56,6 +60,7 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
     html: `
       <p>Hi ${escapeHtml(app.name)},</p>
       <p><strong>Congratulations!</strong> You've been accepted to join the Effective Altruism introductory course!</p>
+      ${slot ? `<p>You're in the group you booked: <strong>${escapeHtml(describeSlot(slot))}</strong>.</p>` : ""}
       <p>Please complete your registration to confirm your participation and set up your account:</p>
       ${btn(onboardUrl, "Complete registration →")}
       <p><strong>What you can expect:</strong></p>

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { newId } from "@/lib/ids";
 import { sendEmail, btn, escapeHtml } from "@/lib/email";
 import { appUrl } from "@/lib/url";
+import { claimPlace, describeSlot, getSlot, inTransaction, listSlots } from "@/lib/slots";
 
 const CONTACT_EMAIL = "programmes@effectiefaltruisme.nl";
 
@@ -52,7 +53,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This email is already registered." }, { status: 409 });
   }
 
-  await db.insert(applications).values({
+  // Slot choices: [first, second?, third?]. The first choice books a place now.
+  const rawChoices: unknown[] = Array.isArray(body.slotChoices) ? body.slotChoices : [];
+  const choices = [...new Set(rawChoices.filter((c): c is string => typeof c === "string" && c.length > 0))].slice(0, 3);
+  if (choices.length > 0) {
+    const open = new Set((await listSlots({ bookableOnly: true })).map((s) => s.id));
+    if (!choices.every((c) => open.has(c))) {
+      return NextResponse.json(
+        { error: "One of the times you picked is no longer available. Please choose again.", code: "slot_unavailable" },
+        { status: 409 }
+      );
+    }
+  }
+
+  const values = {
     id: newId("app"),
     name,
     email,
@@ -72,8 +86,36 @@ export async function POST(req: NextRequest) {
     onlinePreference,
     heardAbout,
     privacyConsent,
-    status: "pending",
-  });
+    status: "pending" as const,
+    slotId: choices[0] ?? null,
+    slotChoice2: choices[1] ?? null,
+    slotChoice3: choices[2] ?? null,
+  };
+
+  if (values.slotId) {
+    // Lock the slot and insert in one transaction, so the last place can only go once.
+    const result = await inTransaction(async (tx) => {
+      const claim = await claimPlace(tx, values.slotId!);
+      if (claim !== "ok") return claim;
+      await tx.insert(applications).values(values);
+      return "ok" as const;
+    });
+    if (result === "full") {
+      return NextResponse.json(
+        { error: "Sorry, your first choice just filled up. Please pick another time.", code: "slot_full" },
+        { status: 409 }
+      );
+    }
+    if (result === "unavailable") {
+      return NextResponse.json(
+        { error: "Your first choice is no longer available. Please pick another time.", code: "slot_unavailable" },
+        { status: 409 }
+      );
+    }
+  } else {
+    await db.insert(applications).values(values);
+  }
+  const bookedSlot = await getSlot(values.slotId);
 
   // Confirmation to the applicant (+ heads-up to the coordinator). Email
   // problems must never make a stored application look like it failed.
@@ -86,6 +128,7 @@ export async function POST(req: NextRequest) {
       html: `
         <p>Hi ${escapeHtml(name)},</p>
         <p>Thanks for applying to the EA Netherlands Intro Fellowship! We've received your application.</p>
+        ${bookedSlot ? `<p>We've reserved a place for you in your first choice: <strong>${escapeHtml(describeSlot(bookedSlot))}</strong>. If you're accepted, this is the group you'll join.</p>` : ""}
         <p>We review applications before each cohort starts and will email you whether you've been placed in a group.
            The fellowship runs for 5 weeks, with a weekly 75-minute online discussion and about 3.5 hours of preparation per week.</p>
         <p>Questions? Reach us at <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>

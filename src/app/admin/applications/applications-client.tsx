@@ -27,9 +27,13 @@ interface Application {
   onlinePreference?: string | null;
   language?: string | null;
   extraInfo?: string | null;
+  slotId?: string | null;
+  slotChoice2?: string | null;
+  slotChoice3?: string | null;
 }
 
-export default function ApplicationsClient({ apps }: { apps: Application[] }) {
+export default function ApplicationsClient({ apps, slotLabels = {} }: { apps: Application[]; slotLabels?: Record<string, string> }) {
+  const slotLabel = (id?: string | null) => (id ? slotLabels[id] ?? "(slot no longer active)" : null);
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState<"accept" | "reject" | null>(null);
@@ -238,6 +242,9 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
                     {app.careerStage && (
                       <p className="text-xs text-slate-400 mt-0.5">{app.careerStage} · {app.occupation ?? app.studyField ?? ""}</p>
                     )}
+                    {app.slotId && (
+                      <p className="text-xs text-teal-700 mt-0.5">Booked: {slotLabel(app.slotId)}</p>
+                    )}
                   </div>
 
                   {/* Actions */}
@@ -296,6 +303,9 @@ export default function ApplicationsClient({ apps }: { apps: Application[] }) {
                         </a>
                       </div>
                     )}
+                    {app.slotId && <DetailRow label="Booked slot (1st choice)" value={slotLabel(app.slotId)!} />}
+                    {app.slotChoice2 && <DetailRow label="2nd choice" value={slotLabel(app.slotChoice2)!} />}
+                    {app.slotChoice3 && <DetailRow label="3rd choice" value={slotLabel(app.slotChoice3)!} />}
                     {availability(app) && (
                       <DetailRow label="Availability" value={availability(app)} />
                     )}

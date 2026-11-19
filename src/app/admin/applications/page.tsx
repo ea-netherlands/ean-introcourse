@@ -1,6 +1,7 @@
 import { db, applications, ensureMigrated } from "@/db";
 import { desc } from "drizzle-orm";
 import ApplicationsClient from "./applications-client";
+import { listSlots, describeSlot } from "@/lib/slots";
 
 export const dynamic = "force-dynamic";
 
@@ -18,5 +19,10 @@ export default async function ApplicationsPage() {
     submittedAt: a.submittedAt.toISOString(),
   }));
 
-  return <ApplicationsClient apps={serialized} />;
+  // Slot id → short description, to show booked slot and back-up choices.
+  const slotLabels = Object.fromEntries(
+    (await listSlots({ bookableOnly: false })).map((s) => [s.id, `${s.name} · ${describeSlot(s)}`])
+  );
+
+  return <ApplicationsClient apps={serialized} slotLabels={slotLabels} />;
 }

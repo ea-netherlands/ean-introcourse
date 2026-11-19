@@ -75,7 +75,7 @@ export function Sidebar({ weeks }: SidebarProps) {
 
   return (
     // Logo and theme toggle live in the SiteHeader above; the sidebar sticks below it.
-    <aside className="sidebar sticky top-[92px] hidden max-h-[calc(100vh-116px)] flex-col self-start overflow-hidden lg:flex">
+    <aside className="sidebar card-ean sticky top-[100px] hidden max-h-[calc(100vh-124px)] w-72 shrink-0 flex-col self-start overflow-hidden lg:flex">
 
 
       {/* Navigation */}

@@ -132,7 +132,7 @@ export default async function LessonPage({
 
       {/* Layout follows the EAN quick course (ean-website src/components/course/lesson-page.tsx):
           muted course link, teal eyebrow, Sentient h1 at weight 500, muted meta line. */}
-      <article className="max-w-[42rem]">
+      <article className="card-ean mx-auto w-full max-w-[52rem] px-5 py-8 sm:px-10 md:px-14 md:py-12">
         {/* Lesson heading */}
         <div className="mb-8 space-y-4">
           <a

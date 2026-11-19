@@ -39,12 +39,14 @@ with quizzes and exercises, facilitators plan weekly online sessions and follow 
 - **Look = effectiefaltruisme.nl** (repo `ea-netherlands/ean-website`, Chakra UI; its quick course in
   `src/components/course/` is the model for our lesson pages). Stone (warm grey) neutrals, which
   `globals.css` puts into the `slate-*` names so existing classes follow; EA teal; Sentient headings at
-  weight 500. Page frame: `graph-paper` background (same recipe as the site) with content in a white
-  `.page-column` (64rem, dashed stone-300 side rules from md). Shared chrome: `SiteHeader` (white,
+  weight 500. Page frame (owner's choice, Nov 2026): `graph-paper` background (same recipe as the
+  site) over the whole page, with content as cards (`card-ean`) directly on it; `.page-column` only
+  centres at 64rem and is transparent. Shared chrome: `SiteHeader` (white,
   sticky, 32px EAN logo, role-based nav with EAN nav-item colours, theme toggle), `SiteFooter`
   (teal-800), `PublicShell` (header + paper + column + footer for login/apply/onboard/signup/graduated).
-  Lessons: menu card on the left (lg+), teal week eyebrow, 30/36px h1, 42rem prose at 18px/1.7.
-  Building blocks: `card-ean` (12px radius, inset key shadow), `badge-ean`, `btn-pill` +
+  Lessons: menu card fixed on the left (lg+), lesson text in its own card next to it; teal week
+  eyebrow, 30/36px h1, prose at 18px/1.7.
+  Building blocks: `card-ean` (12px radius, inset key shadow + soft lift), `badge-ean`, `btn-pill` +
   `btn-pill-primary`/`-secondary` (16px radius), `mark.marker` (max one per section). Logos in
   `public/images/logos/` (white variant in dark mode). Admin uses logo and palette but stays plain.
   The EAN site itself has no dark mode; ours is kept and mirrors the tokens.

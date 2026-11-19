@@ -92,18 +92,22 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 
 ## Auth
 
-- Participants/facilitators: magic link (`/auth/login` → `/api/auth/send-link`; never reveals
-  whether an email exists; tokens SHA-256 hashed, 30 min, single use) or password
+- Participants/facilitators: magic link (`/auth/login` → `/api/auth/send-link`; tokens SHA-256
+  hashed, 30 min, single use) or password
   (`/api/auth/password-login`). Cookie `ean_fellowship_session`, 7 days.
-- Accounts with status `pending` cannot sign in by either method (send-link silently skips them,
+- `/api/auth/send-link` answers `{ ok, status }` with `sent`, `unknown`, `pending` or
+  `rate_limited`, and the login page explains each one ("your email is not yet known to us… apply
+  here"). Revealing that an address is unknown is a deliberate choice by the programme team.
+- Accounts with status `pending` cannot sign in by either method (no link is sent, and
   `/auth/verify` re-checks). Magic links are rate-limited to 3 per address per 15 min (counted in
   `email_log`).
 - Facilitators sign up at `/facilitator/signup` (status pending) and need admin approval
   (status → active) before they can log in. Admins can also add them at `/admin/facilitators`.
 - Group pages/APIs use `canAccessGroup()` (`src/lib/auth.ts`): you only see the group in your own
   `participants.groupId`; role `admin` sees all. Facilitators are assigned to a group the same way.
-- Admin: one shared password from `ADMIN_PASSWORD`; cookie `ean_admin_auth` = SHA-256 of it.
-  `src/middleware.ts` (Edge runtime — use Web Crypto, not `node:crypto`) protects `/admin/*`
+- Admin: one shared password from `ADMIN_PASSWORD`; the cookie `ean_admin_session` is a signed,
+  8-hour session made and checked in `src/lib/admin-session.ts` (Web Crypto, so it also runs in
+  middleware); `DELETE /api/admin/auth` logs out. `src/middleware.ts` protects `/admin/*`
   and `/api/admin/*` (401 JSON), except `/api/admin/auth` and `/api/admin/forgot-password`.
   `POST /api/admin/sessions` is also open to active facilitators; the route checks that itself.
 - An early admin password was hardcoded and is in git history — production must use a different one.

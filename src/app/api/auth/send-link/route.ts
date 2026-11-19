@@ -2,8 +2,12 @@
  * POST /api/auth/send-link
  *
  * Finds a participant by email, generates a magic-link token, and sends
- * the link via email. If the email isn't registered, returns a generic
- * success so we don't reveal which addresses exist.
+ * the link via email. Returns { ok, status } so the login page can explain
+ * what happened: "sent", "unknown" (no participant with this email: they
+ * should use their application address or apply), "pending" (accepted but
+ * registration not completed, or facilitator not yet approved) or
+ * "rate_limited". Saying an address is unknown was a deliberate choice by the
+ * programme team: clarity for applicants over hiding who is registered.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -33,10 +37,11 @@ export async function POST(req: NextRequest) {
       .where(eq(participants.email, email))
       .limit(1);
 
-    // Always return OK — don't reveal whether the email exists, whether the
-    // account is still pending approval, or whether we're rate-limiting.
-    if (!participant || participant.status === "pending") {
-      return NextResponse.json({ ok: true });
+    if (!participant) {
+      return NextResponse.json({ ok: true, status: "unknown" });
+    }
+    if (participant.status === "pending") {
+      return NextResponse.json({ ok: true, status: "pending" });
     }
 
     // Rate limit: at most MAX_LINKS sign-in emails per address per window.
@@ -52,7 +57,7 @@ export async function POST(req: NextRequest) {
         )
       );
     if (recent >= MAX_LINKS) {
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, status: "rate_limited" });
     }
 
     const raw = await createLoginToken(participant.id);
@@ -74,7 +79,7 @@ export async function POST(req: NextRequest) {
       kind: "magic_link",
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, status: "sent" });
   } catch (err) {
     console.error("[send-link] error", err);
     return NextResponse.json({ error: "Internal error." }, { status: 500 });

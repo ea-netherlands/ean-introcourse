@@ -9,13 +9,13 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getCurrentParticipant, canAccessGroup } from "@/lib/auth";
+import { SiteHeader } from "@/components/site-header";
 import {
   db, ensureMigrated,
   groups, participants, lessonProgress, applications, fellowshipSessions,
   lessonResponses,
 } from "@/db";
 import { eq, inArray, and, gte } from "drizzle-orm";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { WEEK_DEFS, getLessonById } from "@/lib/lessons";
 import { QUIZ_ANSWERS } from "@/lib/quiz-answers";
 import { parseQuizHtml, hasQuizHtml } from "@/lib/quiz-parser";
@@ -195,38 +195,10 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-10 flex h-14 items-center px-6 gap-4"
-        style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-sidebar)" }}
-      >
-        <Link href="/materials" className="flex items-center gap-2">
-          <span className="text-ea-teal font-bold">◆</span>
-          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Fellowship</span>
-        </Link>
-        <nav className="flex items-center gap-1 ml-4">
-          <Link href="/materials" className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Materials</Link>
-          <Link href="/account" className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>My account</Link>
-          <Link href={`/group/${groupId}`} className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Group chat</Link>
-          <Link href="/sessions" className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Sessions</Link>
-          <span
-            className="px-3 py-1.5 rounded-lg text-sm font-medium"
-            style={{ background: "rgba(22,135,156,0.1)", color: "var(--color-ea-teal)" }}
-          >
-            Overview
-          </span>
-        </nav>
-        <div className="ml-auto flex items-center gap-3">
-          <ThemeToggle />
-          <form action="/auth/logout" method="POST">
-            <button type="submit" className="text-xs px-3 py-1.5 rounded-lg transition" style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}>
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
+    <div className="min-h-screen graph-paper">
+      <SiteHeader user={{ name: me.name, role: me.role, groupId: me.groupId }} />
 
+      <div className="page-column">
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
         {/* Title */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -517,6 +489,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
           )}
         </section>
       </main>
+      </div>
     </div>
   );
 }

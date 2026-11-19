@@ -2,7 +2,6 @@
 
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 
 function LoginForm() {
   const [password, setPassword] = useState("");
@@ -46,11 +45,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#f8fafc" }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "#fafaf9" }}>
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 shadow-sm p-8" style={{ background: "#ffffff" }}>
-        <div className="flex items-center gap-2 mb-8">
-          <Image src="/ean-logo-mark.svg" alt="EAN" width={28} height={28} />
-          <span className="font-serif text-slate-700">Admin access</span>
+        <div className="mb-8 space-y-4">
+          <img src="/images/logos/ean-logo.svg" alt="Effectief Altruïsme Nederland" className="h-10 w-auto" />
+          <h1 className="font-serif text-2xl text-slate-900">Admin access</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,7 +74,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50 transition"
+            className="btn-pill btn-pill-primary w-full rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50 transition"
           >
             {loading ? "Checking…" : "Sign in"}
           </button>

@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { GROUP_TIMESLOTS } from "@/lib/availability";
+import { PublicShell } from "@/components/public-shell";
 
 // Same slots (and values) as the application form and group timing.
 const TIMESLOTS = GROUP_TIMESLOTS.map((t) => ({ id: t.value, label: t.label }));
@@ -53,7 +54,7 @@ function OnboardForm() {
 
   if (status === "done") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+      <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
         <div className="max-w-md w-full text-center space-y-4">
           <div className="text-5xl">🎉</div>
           <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
@@ -64,7 +65,7 @@ function OnboardForm() {
           </p>
           <Link
             href="/auth/login"
-            className="inline-block mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
+            className="btn-pill btn-pill-primary inline-block mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
             style={{ background: "var(--color-ea-teal)" }}
           >
             Sign in →
@@ -75,10 +76,9 @@ function OnboardForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
       <div className="max-w-md w-full">
         <div className="mb-8 text-center">
-          <span className="text-ea-teal text-2xl font-bold">◆</span>
           <h1 className="text-2xl font-bold mt-2" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
             Complete your registration
           </h1>
@@ -87,7 +87,7 @@ function OnboardForm() {
           </p>
         </div>
 
-        <form onSubmit={submit} className="space-y-6 rounded-2xl p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+        <form onSubmit={submit} className="card-ean space-y-6 p-6 sm:p-8">
           {/* Time slots */}
           <div>
             <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>
@@ -153,7 +153,7 @@ function OnboardForm() {
           <button
             type="submit"
             disabled={status === "sending"}
-            className="w-full rounded-xl py-2.5 text-sm font-semibold text-white disabled:opacity-50 transition"
+            className="btn-pill btn-pill-primary w-full rounded-xl py-2.5 text-sm font-semibold text-white disabled:opacity-50 transition"
             style={{ background: "var(--color-ea-teal)" }}
           >
             {status === "sending" ? "Saving…" : "Complete registration"}
@@ -165,5 +165,9 @@ function OnboardForm() {
 }
 
 export default function OnboardPage() {
-  return <Suspense><OnboardForm /></Suspense>;
+  return (
+    <PublicShell>
+      <Suspense><OnboardForm /></Suspense>
+    </PublicShell>
+  );
 }

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   EAN design system tokens — EA Teal primary · Slate neutral
+   EAN design system tokens — EA Teal primary · Stone neutral (as effectiefaltruisme.nl)
    Fonts: Sentient (headings) + Atkinson Hyperlegible (body)
    ============================================================ */
 
@@ -19,18 +19,19 @@
   --color-teal-900: #062328;
   --color-teal-950: #031012;
 
-  /* Website-exact slate ramp */
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-400: #94a3b8;
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
+  /* Neutral ramp. The EAN website uses Chakra "stone" (warm grey); the slate-* names are
+     kept so existing classes keep working, but they now carry the stone values. */
+  --color-slate-50: #fafaf9;
+  --color-slate-100: #f5f5f4;
+  --color-slate-200: #e7e5e4;
+  --color-slate-300: #d6d3d1;
+  --color-slate-400: #a8a29e;
+  --color-slate-500: #78716c;
+  --color-slate-600: #57534e;
+  --color-slate-700: #44403c;
+  --color-slate-800: #292524;
+  --color-slate-900: #1c1917;
+  --color-slate-950: #0c0a09;
 
   /* EA brand alias — use bg-ea-teal, text-ea-teal, border-ea-teal etc. */
   --color-ea-teal: #16879c;
@@ -44,19 +45,19 @@
 /* ── Light mode (default) ───────────────────────────────────── */
 :root {
   --bg-page: #ffffff;
-  --bg-sidebar: #f8fafc;
-  --bg-card: #f1f5f9;
-  --border: #e2e8f0;
+  --bg-sidebar: #fafaf9;
+  --bg-card: #ffffff;
+  --border: #e7e5e4;
 
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
+  --text-primary: #1c1917;
+  --text-secondary: #44403c;
+  --text-muted: #57534e;
 
-  --prose-heading: #0f172a;
-  --prose-body: #1e293b;
-  --prose-link: #16879c;
-  --prose-link-hover: #106574;
-  --prose-strong: #0f172a;
+  --prose-heading: #1c1917;
+  --prose-body: #292524;
+  --prose-link: #106574;
+  --prose-link-hover: #0b424c;
+  --prose-strong: #1c1917;
 
   --teal-callout-bg: #f0fafb;
   --teal-callout-border: #aae8f3;
@@ -82,20 +83,20 @@
 /* Applies when system prefers dark AND no explicit override */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-page: #020617;
-    --bg-sidebar: #0f172a;
-    --bg-card: #1e293b;
-    --border: #334155;
+    --bg-page: #0c0a09;
+    --bg-sidebar: #1c1917;
+    --bg-card: #1c1917;
+    --border: #44403c;
 
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
+    --text-primary: #fafaf9;
+    --text-secondary: #d6d3d1;
+    --text-muted: #a8a29e;
 
-    --prose-heading: #f1f5f9;
-    --prose-body: #cbd5e1;
+    --prose-heading: #fafaf9;
+    --prose-body: #d6d3d1;
     --prose-link: #43cce5;
     --prose-link-hover: #74daeb;
-    --prose-strong: #f8fafc;
+    --prose-strong: #fafaf9;
 
     --teal-callout-bg: #031012;
     --teal-callout-border: #106574;
@@ -104,20 +105,20 @@
 
 /* Applies when user explicitly chose dark */
 :root[data-theme="dark"] {
-  --bg-page: #020617;
-  --bg-sidebar: #0f172a;
-  --bg-card: #1e293b;
-  --border: #334155;
+  --bg-page: #0c0a09;
+  --bg-sidebar: #1c1917;
+  --bg-card: #1c1917;
+  --border: #44403c;
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-primary: #fafaf9;
+  --text-secondary: #d6d3d1;
+  --text-muted: #a8a29e;
 
-  --prose-heading: #f1f5f9;
-  --prose-body: #cbd5e1;
+  --prose-heading: #fafaf9;
+  --prose-body: #d6d3d1;
   --prose-link: #43cce5;
   --prose-link-hover: #74daeb;
-  --prose-strong: #f8fafc;
+  --prose-strong: #fafaf9;
 
   --teal-callout-bg: #031012;
   --teal-callout-border: #106574;
@@ -273,8 +274,9 @@ select option {
 
 /* ── Sidebar / layout surfaces using CSS vars ───────────────── */
 .sidebar {
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border);
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 
 .lesson-card-border {
@@ -285,3 +287,185 @@ select option {
   .no-print { display: none !important; }
   body { background: #fff; color: #000; }
 }
+
+/* ── EAN website chrome (header, footer, pill buttons) ──────── */
+:root {
+  --header-bg: #ffffff;
+  --footer-bg: #0b424c; /* ea_teal 800, as the effectiefaltruisme.nl footer */
+
+}
+:root[data-theme="dark"] {
+  --header-bg: #0c0a09;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --header-bg: #0c0a09;
+  }
+}
+
+/* Primary and secondary pill buttons, as on effectiefaltruisme.nl (16px radius). */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background-color 150ms, box-shadow 150ms, transform 150ms;
+}
+.btn-pill:active { transform: translateY(1px); }
+.btn-pill-primary {
+  background: #16879c;
+  color: #fff;
+  box-shadow: var(--btn-solid-shadow);
+}
+.btn-pill-primary:hover { background: rgba(22, 135, 156, 0.9); box-shadow: var(--btn-solid-shadow-hover); }
+.btn-pill-secondary {
+  background: var(--bg-page);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  box-shadow: var(--btn-subtle-shadow);
+}
+.btn-pill-secondary:hover { background: var(--bg-sidebar); color: var(--text-primary); }
+
+/* Coloured logo in light mode, white logo in dark mode. */
+.logo-dark { display: none; }
+:root[data-theme="dark"] .logo-light { display: none; }
+:root[data-theme="dark"] .logo-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-light { display: none; }
+  :root:not([data-theme="light"]) .logo-dark { display: block; }
+}
+
+/* ── Graph paper, cards and badges from effectiefaltruisme.nl ──
+   Same recipe as ean-website src/app/(website)/globals.css: soft 24px minor
+   lines in stone-100 and 120px major lines in ea_teal-100. */
+:root {
+  --graph-paper-major: color-mix(in srgb, #dbf5fa 55%, transparent);
+  --graph-paper-minor: color-mix(in srgb, #f5f5f4 65%, transparent);
+  --marker: #fde68a;
+  --rule: #d6d3d1; /* stone-300, the site's dashed rules */
+}
+:root[data-theme="dark"] {
+  --graph-paper-major: color-mix(in srgb, #0b424c 45%, transparent);
+  --graph-paper-minor: color-mix(in srgb, #292524 55%, transparent);
+  --rule: #44403c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --graph-paper-major: color-mix(in srgb, #0b424c 45%, transparent);
+    --graph-paper-minor: color-mix(in srgb, #292524 55%, transparent);
+    --rule: #44403c;
+  }
+}
+
+.graph-paper {
+  background-color: var(--bg-page);
+  background-image:
+    linear-gradient(var(--graph-paper-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-paper-major) 1px, transparent 1px),
+    linear-gradient(var(--graph-paper-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-paper-minor) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+  background-position: center top;
+}
+
+/* The faint vertical rules the EAN site draws at the edges of its content column. */
+.column-rules {
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+/* EAN card on the graph paper: white, 12px radius, stone border, the site's
+   inset key shadow plus its soft "md" lift so it stands off the paper. */
+.card-ean {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow:
+    inset 0 -4px rgba(3, 16, 18, 0.025),
+    inset 0 4px 0 0 rgba(3, 16, 18, 0.0125),
+    0 4px 8px rgba(28, 25, 23, 0.06),
+    0 0 1px rgba(28, 25, 23, 0.25);
+}
+
+/* Page column: centres the content at 64rem. Transparent on purpose, so the
+   cards on the page sit directly on the graph paper. */
+.page-column {
+  max-width: 64rem;
+  margin-inline: auto;
+  min-height: calc(100vh - 69px);
+}
+
+/* Pill label with teal border and halo ("Effective altruism in the Netherlands"). */
+.badge-ean {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  border: 1px solid #aae8f3;
+  background: var(--bg-page);
+  min-height: 2rem;
+  padding: 0 0.875rem;
+  font-size: 0.9375rem;
+  color: #16879c;
+  box-shadow: 0 0 0 4px rgba(3, 16, 18, 0.024);
+}
+:root[data-theme="dark"] .badge-ean { border-color: #106574; }
+
+/* Yellow highlighter behind one key phrase, as on the EAN site. */
+mark.marker {
+  background: var(--marker);
+  color: #1c1917;
+  padding: 0.02em 0.16em;
+  border-radius: 0.15em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* EAN navbar items (header-menu/pillar-menu.tsx) and header border (gray-200). */
+:root { --header-border: #e4e4e7; }
+:root[data-theme="dark"] { --header-border: #292524; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --header-border: #292524; } }
+.nav-item { color: #57534e; }
+.nav-item:hover { color: #1c1917; background: #fafaf9; }
+.nav-item-active { color: #106574; background: #f6fdfe; }
+:root[data-theme="dark"] .nav-item { color: #a8a29e; }
+:root[data-theme="dark"] .nav-item:hover { color: #fafaf9; background: #1c1917; }
+:root[data-theme="dark"] .nav-item-active { color: #74daeb; background: #062328; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .nav-item { color: #a8a29e; }
+  :root:not([data-theme="light"]) .nav-item:hover { color: #fafaf9; background: #1c1917; }
+  :root:not([data-theme="light"]) .nav-item-active { color: #74daeb; background: #062328; }
+}
+
+/* Teal eyebrow (lesson "Week N: …") and the EAN callout surface. */
+:root { --eyebrow: #106574; --callout-bg: #fafaf9; }
+:root[data-theme="dark"] { --eyebrow: #74daeb; --callout-bg: #1c1917; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --eyebrow: #74daeb; --callout-bg: #1c1917; } }
+
+/* Lesson prose at the EAN article/course size (ean-website src/components/ui/prose.tsx):
+   18px, line-height 1.7, near-black text, Sentient headings at weight 500,
+   links teal-700 with a soft 3px-offset underline. */
+.prose-content {
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+.prose-content p,
+.prose-content li { line-height: 1.7; }
+.prose-content h2 { font-size: 1.6em; font-weight: 500; line-height: 1.25; margin-top: 2em; margin-bottom: 0.6em; }
+.prose-content h3 { font-size: 1.3em; font-weight: 500; line-height: 1.35; margin-top: 1.8em; margin-bottom: 0.5em; }
+.prose-content a {
+  color: var(--prose-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--prose-link) 40%, transparent);
+}
+.prose-content a:hover {
+  color: var(--text-primary);
+  text-decoration-color: color-mix(in srgb, var(--prose-link) 60%, transparent);
+}
+.prose-content img { border-radius: 12px; margin: 1.7em auto; max-width: 100%; }

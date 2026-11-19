@@ -4,9 +4,9 @@
 
 import { redirect } from "next/navigation";
 import { getCurrentParticipant } from "@/lib/auth";
+import { SiteHeader } from "@/components/site-header";
 import { db, ensureMigrated, groups, participants, groupPosts, groupPostReplies } from "@/db";
 import { eq, isNull, desc } from "drizzle-orm";
-import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 import ChatClient from "./chat-client";
 
@@ -60,29 +60,10 @@ export default async function ChatPage({
   const posts = await postsQuery;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-page)" }}>
-      {/* Top bar */}
-      <header
-        className="flex h-14 items-center px-6 gap-4 shrink-0"
-        style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-sidebar)" }}
-      >
-        <Link href="/materials" className="flex items-center gap-2">
-          <span className="text-ea-teal font-bold">◆</span>
-          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Fellowship</span>
-        </Link>
-        <nav className="flex items-center gap-1 ml-4">
-          <Link href="/materials" className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Materials</Link>
-          <Link href="/account" className="px-3 py-1.5 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Account</Link>
-          <span className="px-3 py-1.5 rounded-lg text-sm font-medium" style={{ background: "rgba(22,135,156,0.1)", color: "var(--color-ea-teal)" }}>💬 Chat</span>
-        </nav>
-        <div className="ml-auto flex items-center gap-3">
-          <ThemeToggle />
-          <form action="/auth/logout" method="POST">
-            <button type="submit" className="text-xs px-3 py-1.5 rounded-lg" style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}>Sign out</button>
-          </form>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col graph-paper">
+      <SiteHeader user={{ name: me.name, role: me.role, groupId: me.groupId }} />
 
+      <div className="page-column flex w-full flex-1 flex-col">
       <div className="flex flex-1 overflow-hidden max-w-3xl mx-auto w-full px-4 py-6 gap-6">
         {/* Channel sidebar */}
         <aside className="w-44 shrink-0">
@@ -129,6 +110,7 @@ export default async function ChatPage({
           myId={me.id}
           myName={me.name}
         />
+      </div>
       </div>
     </div>
   );

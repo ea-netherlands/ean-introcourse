@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { TIMESLOTS } from "@/lib/availability";
+import { PublicShell } from "@/components/public-shell";
 
 // ── Constants matching Typeform exactly ──────────────────────────────
 
@@ -88,7 +88,7 @@ const HEARD_ABOUT_OPTIONS = [
 
 const TOTAL_STEPS = 4;
 
-export default function ApplyPage() {
+function ApplyPageContent() {
   const [step, setStep] = useState(1);
 
   // Step 1 — Why join
@@ -215,7 +215,7 @@ export default function ApplyPage() {
   // ── Success screen ─────────────────────────────────────────────────
   if (status === "done") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+      <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
         <div className="max-w-md w-full text-center space-y-4">
           <div className="text-5xl">✉️</div>
           <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
@@ -237,14 +237,10 @@ export default function ApplyPage() {
 
   // ── Form ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <span className="text-ea-teal text-2xl font-bold">◆</span>
-            <span className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>EA Netherlands Fellowship</span>
-          </Link>
           <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
             Sign up for the Intro Fellowship
           </h1>
@@ -266,8 +262,7 @@ export default function ApplyPage() {
 
         <form onSubmit={submit}>
           <div
-            className="rounded-2xl p-6 space-y-5"
-            style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+            className="card-ean p-6 sm:p-8 space-y-5"
           >
 
             {/* ── Step 1: Why join ─────────────────────────────────── */}
@@ -672,7 +667,7 @@ export default function ApplyPage() {
                 type="button"
                 onClick={() => { if (canAdvance()) setStep((s) => s + 1); }}
                 disabled={!canAdvance()}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-colors"
+                className="btn-pill btn-pill-primary flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-colors"
                 style={{ background: "var(--color-ea-teal)" }}
               >
                 Continue →
@@ -681,7 +676,7 @@ export default function ApplyPage() {
               <button
                 type="submit"
                 disabled={status === "sending" || !privacyConsent}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+                className="btn-pill btn-pill-primary flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors"
                 style={{ background: "var(--color-ea-teal)" }}
               >
                 {status === "sending" ? "Submitting…" : "Submit application ✓"}
@@ -785,5 +780,13 @@ function ToggleChip({
     >
       {selected && "✓ "}{children}
     </button>
+  );
+}
+
+export default function ApplyPage() {
+  return (
+    <PublicShell>
+      <ApplyPageContent />
+    </PublicShell>
   );
 }

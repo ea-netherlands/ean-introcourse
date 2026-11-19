@@ -303,7 +303,7 @@ export function FacilitatorSessionForm({
       <button
         type="submit"
         disabled={saving}
-        className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition"
+        className="btn-pill btn-pill-primary px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition"
         style={{ background: "var(--color-ea-teal)" }}
       >
         {saving

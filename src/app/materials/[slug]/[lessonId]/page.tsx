@@ -126,43 +126,43 @@ export default async function LessonPage({
   const badge = TYPE_COLORS[lesson.type];
 
   return (
-    <main className="flex-1 min-w-0" style={{ background: "var(--bg-page)" }}>
+    <main className="flex-1 min-w-0">
       {/* Fixed top progress bar */}
       <LessonProgressTracker lessonId={lessonId} />
 
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        {/* Breadcrumb */}
-        <div
-          className="flex items-center gap-2 text-xs mb-6"
-          style={{ color: "var(--text-muted)" }}
-        >
+      {/* Layout follows the EAN quick course (ean-website src/components/course/lesson-page.tsx):
+          muted course link, teal eyebrow, Sentient h1 at weight 500, muted meta line. */}
+      <article className="card-ean mx-auto w-full max-w-[52rem] px-5 py-8 sm:px-10 md:px-14 md:py-12">
+        {/* Lesson heading */}
+        <div className="mb-8 space-y-4">
           <a
             href={`/materials/${slug}`}
-            className="hover:text-ea-teal transition-colors"
+            className="text-sm hover:text-ea-teal transition-colors"
+            style={{ color: "var(--text-muted)" }}
           >
-            {week?.shortTitle ?? `Week ${weekInfo.weekNumber}`}
+            EA Netherlands Intro Course
           </a>
-          <span>›</span>
-          <span style={{ color: "var(--text-secondary)" }}>
-            {lesson.counter || `Lesson ${lesson.lessonNumber}`}
-          </span>
-        </div>
 
-        {/* Lesson heading */}
-        <div className="mb-8">
-          <span
-            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mb-3"
-            style={{ background: badge.bg, color: badge.text }}
-          >
-            {TYPE_LABELS[lesson.type]}
-          </span>
+          <p className="text-sm font-semibold" style={{ color: "var(--eyebrow)" }}>
+            {week?.title ?? `Week ${weekInfo.weekNumber}`}
+          </p>
 
           <h1
-            className="text-2xl font-bold leading-tight mb-5"
-            style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}
+            className="text-[1.875rem] leading-[1.2] md:text-[2.25rem]"
+            style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)", fontWeight: 500 }}
           >
             {lesson.title}
           </h1>
+
+          <div className="flex flex-wrap items-center gap-2 text-sm" style={{ color: "var(--text-muted)" }}>
+            <span
+              className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+              style={{ background: badge.bg, color: badge.text }}
+            >
+              {TYPE_LABELS[lesson.type]}
+            </span>
+            <span>{lesson.counter || `Lesson ${lesson.lessonNumber}`}</span>
+          </div>
 
           {/* Inline reading progress bar */}
           <LessonProgressTracker lessonId={lessonId} inlineOnly />
@@ -255,7 +255,7 @@ export default async function LessonPage({
             <div className="flex-1" />
           )}
         </div>
-      </div>
+      </article>
     </main>
   );
 }

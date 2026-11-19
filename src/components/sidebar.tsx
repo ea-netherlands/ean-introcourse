@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ThemeToggle } from "./theme-toggle";
-import { UserChip } from "./auth-banner";
 import type { SidebarWeek } from "@/lib/lessons";
 
 const TYPE_ICON: Record<string, string> = {
@@ -21,7 +19,7 @@ interface SidebarProps {
   participant?: { name: string; groupId?: string | null; role?: string } | null;
 }
 
-export function Sidebar({ weeks, participant }: SidebarProps) {
+export function Sidebar({ weeks }: SidebarProps) {
   const pathname = usePathname();
 
   // Determine the active week slug from the URL
@@ -76,106 +74,12 @@ export function Sidebar({ weeks, participant }: SidebarProps) {
   };
 
   return (
-    <aside className="sidebar hidden lg:flex w-72 shrink-0 flex-col">
-      {/* Header */}
-      <div
-        className="flex h-16 items-center justify-between px-5"
-        style={{ borderBottom: "1px solid var(--border)" }}
-      >
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-ea-teal text-xl font-bold">◆</span>
-          <span
-            className="text-sm font-semibold"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Fellowship
-          </span>
-        </Link>
-        <ThemeToggle />
-      </div>
+    // Logo and theme toggle live in the SiteHeader above; the sidebar sticks below it.
+    <aside className="sidebar card-ean sticky top-[100px] hidden max-h-[calc(100vh-124px)] w-72 shrink-0 flex-col self-start overflow-hidden lg:flex">
 
-      {/* User name bar — shown at top when logged in */}
-      {participant && (
-        <div
-          className="px-4 py-2.5 flex items-center gap-2.5"
-          style={{ background: "rgba(22,135,156,0.07)", borderBottom: "1px solid var(--border)" }}
-        >
-          <span
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-            style={{ background: "var(--color-ea-teal)" }}
-          >
-            {participant.name.charAt(0).toUpperCase()}
-          </span>
-          <span className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
-            {participant.name}
-          </span>
-        </div>
-      )}
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {/* Account / Group quick links */}
-        {participant && (
-          <div className="mb-4 space-y-0.5">
-            <Link
-              href="/account"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
-              style={{
-                background: pathname === "/account" ? "rgba(22,135,156,0.1)" : "transparent",
-                color: pathname === "/account" ? "var(--color-ea-teal)" : "var(--text-secondary)",
-              }}
-            >
-              <span>My account</span>
-            </Link>
-            {participant.groupId ? (
-              <Link
-                href={`/group/${participant.groupId}`}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
-                style={{
-                  background: pathname === `/group/${participant.groupId}` ? "rgba(22,135,156,0.1)" : "transparent",
-                  color: pathname === `/group/${participant.groupId}` ? "var(--color-ea-teal)" : "var(--text-secondary)",
-                }}
-              >
-                <span>Group chat</span>
-              </Link>
-            ) : (
-              <Link
-                href="/chat"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
-                style={{
-                  background: pathname.startsWith("/chat") ? "rgba(22,135,156,0.1)" : "transparent",
-                  color: pathname.startsWith("/chat") ? "var(--color-ea-teal)" : "var(--text-secondary)",
-                }}
-              >
-                <span>Chat</span>
-              </Link>
-            )}
-            {(participant.role === "facilitator" || participant.role === "admin") && (
-              <Link
-                href="/sessions"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
-                style={{
-                  background: pathname.startsWith("/sessions") ? "rgba(22,135,156,0.1)" : "transparent",
-                  color: pathname.startsWith("/sessions") ? "var(--color-ea-teal)" : "var(--text-secondary)",
-                }}
-              >
-                <span>Sessions</span>
-              </Link>
-            )}
-            {(participant.role === "facilitator" || participant.role === "admin") && participant.groupId && (
-              <Link
-                href={`/group/${participant.groupId}/overview`}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
-                style={{
-                  background: pathname.endsWith("/overview") ? "rgba(22,135,156,0.1)" : "transparent",
-                  color: pathname.endsWith("/overview") ? "var(--color-ea-teal)" : "var(--text-secondary)",
-                }}
-              >
-                <span>Group overview</span>
-              </Link>
-            )}
-          </div>
-        )}
 
         <p
           className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider"
@@ -289,23 +193,6 @@ export function Sidebar({ weeks, participant }: SidebarProps) {
         </div>
       </nav>
 
-      {/* Footer */}
-      <div
-        className="px-4 py-4"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        {participant ? (
-          <UserChip name={participant.name} />
-        ) : (
-          <Link
-            href="/auth/login"
-            className="text-xs hover:opacity-80 transition"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Sign in →
-          </Link>
-        )}
-      </div>
     </aside>
   );
 }
@@ -316,15 +203,11 @@ export function MobileBar({ weeks }: SidebarProps) {
 
   return (
     <div
-      className="lg:hidden flex h-14 items-center px-4 gap-3"
-      style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-sidebar)" }}
+      className="card-ean flex h-12 items-center gap-3 px-4 lg:hidden"
     >
-      <Link href="/" className="flex items-center gap-2">
-        <span className="text-ea-teal text-lg font-bold">◆</span>
-        <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-          Fellowship
-        </span>
-      </Link>
+      <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+        Weeks
+      </span>
       <div className="ml-auto flex items-center gap-1 overflow-x-auto">
         {weeks.map((week) => {
           const isActive = pathname.startsWith(`/materials/${week.slug}`);
@@ -342,7 +225,6 @@ export function MobileBar({ weeks }: SidebarProps) {
             </Link>
           );
         })}
-        <ThemeToggle />
       </div>
     </div>
   );

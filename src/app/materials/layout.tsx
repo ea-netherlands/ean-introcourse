@@ -2,8 +2,13 @@ import { redirect } from "next/navigation";
 import { getAllWeeksWithLessons } from "@/lib/lessons";
 import { Sidebar, MobileBar } from "@/components/sidebar";
 import { AuthBanner } from "@/components/auth-banner";
+import { SiteHeader } from "@/components/site-header";
 import { getCurrentParticipant } from "@/lib/auth";
 
+/**
+ * Lesson pages: graph paper over the whole page, the lesson menu as a card on
+ * the left (lg and up) and the lesson text in its own card next to it.
+ */
 export default async function MaterialsLayout({
   children,
 }: {
@@ -18,19 +23,19 @@ export default async function MaterialsLayout({
   }
 
   return (
-    <div
-      className="flex min-h-screen"
-      style={{ background: "var(--bg-page)" }}
-    >
-      <Sidebar
-        weeks={weeks}
-        participant={participant ? { name: participant.name, groupId: participant.groupId, role: participant.role } : null}
+    <div className="min-h-screen graph-paper">
+      <SiteHeader
+        fullWidth
+        user={participant ? { name: participant.name, role: participant.role, groupId: participant.groupId } : null}
       />
+      <div className="flex gap-6 px-3 py-4 sm:px-4 md:py-6 lg:px-6 lg:py-8">
+        <Sidebar weeks={weeks} />
 
-      <div className="flex-1 min-w-0 flex flex-col">
-        <MobileBar weeks={weeks} />
-        <AuthBanner hidden={!!participant} />
-        {children}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <MobileBar weeks={weeks} />
+          <AuthBanner hidden={!!participant} />
+          {children}
+        </div>
       </div>
     </div>
   );

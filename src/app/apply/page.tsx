@@ -215,7 +215,7 @@ function ApplyPageContent() {
   // ── Success screen ─────────────────────────────────────────────────
   if (status === "done") {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+      <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
         <div className="max-w-md w-full text-center space-y-4">
           <div className="text-5xl">✉️</div>
           <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
@@ -237,7 +237,7 @@ function ApplyPageContent() {
 
   // ── Form ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4 py-12" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -262,8 +262,7 @@ function ApplyPageContent() {
 
         <form onSubmit={submit}>
           <div
-            className="rounded-2xl p-6 space-y-5"
-            style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+            className="card-ean p-6 sm:p-8 space-y-5"
           >
 
             {/* ── Step 1: Why join ─────────────────────────────────── */}

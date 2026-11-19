@@ -17,10 +17,11 @@ export function AuthBanner({ hidden }: Props) {
 
   return (
     <div
-      className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
+      className="flex items-center justify-between gap-4 rounded-xl px-4 py-3 text-sm"
       style={{
-        background: "rgba(22,135,156,0.08)",
-        borderBottom: "1px solid rgba(22,135,156,0.2)",
+        // EAN callout: light surface, dashed rule, 12px radius.
+        background: "var(--callout-bg)",
+        border: "1px dashed var(--rule)",
       }}
     >
       <span style={{ color: "var(--text-secondary)" }}>
@@ -28,7 +29,7 @@ export function AuthBanner({ hidden }: Props) {
       </span>
       <Link
         href="/auth/login"
-        className="btn-pill btn-pill-primary shrink-0 rounded-lg bg-ea-teal px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
+        className="btn-pill btn-pill-primary h-8 shrink-0 px-3 text-xs"
       >
         Sign in
       </Link>

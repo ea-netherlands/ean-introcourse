@@ -32,7 +32,7 @@ function FacilitatorSignupPageContent() {
 
   if (status === "done") {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+      <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
         <div className="max-w-sm text-center space-y-4">
           <div className="text-5xl">✅</div>
           <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Account created</h1>
@@ -48,7 +48,7 @@ function FacilitatorSignupPageContent() {
   }
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
       <div className="max-w-sm w-full">
         <div className="mb-6 text-center">
           <h1 className="text-xl font-bold mt-2" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
@@ -56,7 +56,7 @@ function FacilitatorSignupPageContent() {
           </h1>
         </div>
 
-        <form onSubmit={submit} className="space-y-4 rounded-2xl p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+        <form onSubmit={submit} className="card-ean space-y-4 p-6 sm:p-8">
           {[
             { label: "Full name", value: name, onChange: setName, type: "text", placeholder: "Your name" },
             { label: "Email", value: email, onChange: setEmail, type: "email", placeholder: "you@example.com" },

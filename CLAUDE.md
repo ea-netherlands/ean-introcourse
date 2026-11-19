@@ -36,13 +36,18 @@ with quizzes and exercises, facilitators plan weekly online sessions and follow 
 - **Styles:** Tailwind CSS v4 (no config file — `postcss.config.mjs` + `@theme`/`@utility` in
   `src/app/globals.css`) plus CSS variables (`--bg-page`, `--bg-card`, `--text-primary`,
   `--text-muted`, `--border`, `--color-ea-teal` = `#16879C`). Dark/light via `data-theme` on `<html>`.
-- **Look = effectiefaltruisme.nl** (repo `ea-netherlands/ean-website`, Chakra UI): stone (warm grey)
-  neutrals, which `globals.css` puts into the `slate-*` names so existing classes follow; EA teal;
-  Sentient headings. Shared chrome: `SiteHeader` (white, sticky, EAN logo, role-based nav, theme
-  toggle; `fullWidth` on lesson pages), `SiteFooter` (dark teal `--footer-bg`), `PublicShell`
-  (header + footer for login/apply/onboard/signup/graduated). Buttons: `btn-pill btn-pill-primary`
-  / `btn-pill-secondary` (16px radius). Logos in `public/images/logos/` (white variant shown in
-  dark mode via `.logo-light`/`.logo-dark`). Admin uses the logo and palette but stays plain.
+- **Look = effectiefaltruisme.nl** (repo `ea-netherlands/ean-website`, Chakra UI; its quick course in
+  `src/components/course/` is the model for our lesson pages). Stone (warm grey) neutrals, which
+  `globals.css` puts into the `slate-*` names so existing classes follow; EA teal; Sentient headings at
+  weight 500. Page frame: `graph-paper` background (same recipe as the site) with content in a white
+  `.page-column` (64rem, dashed stone-300 side rules from md). Shared chrome: `SiteHeader` (white,
+  sticky, 32px EAN logo, role-based nav with EAN nav-item colours, theme toggle), `SiteFooter`
+  (teal-800), `PublicShell` (header + paper + column + footer for login/apply/onboard/signup/graduated).
+  Lessons: menu card on the left (lg+), teal week eyebrow, 30/36px h1, 42rem prose at 18px/1.7.
+  Building blocks: `card-ean` (12px radius, inset key shadow), `badge-ean`, `btn-pill` +
+  `btn-pill-primary`/`-secondary` (16px radius), `mark.marker` (max one per section). Logos in
+  `public/images/logos/` (white variant in dark mode). Admin uses logo and palette but stays plain.
+  The EAN site itself has no dark mode; ours is kept and mirrors the tokens.
 - **Fonts:** self-hosted Atkinson Hyperlegible Next (body) + Sentient (headings), `src/app/fonts.ts`
 - **Content:** scraped lesson JSON in `content/lessons/` (54 files,
   `{title, counter, url, html, images, files, videos, scrapedAt}`); `html` is injected via

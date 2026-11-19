@@ -60,9 +60,10 @@ export default async function ChatPage({
   const posts = await postsQuery;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-screen flex flex-col graph-paper">
       <SiteHeader user={{ name: me.name, role: me.role, groupId: me.groupId }} />
 
+      <div className="page-column flex w-full flex-1 flex-col">
       <div className="flex flex-1 overflow-hidden max-w-3xl mx-auto w-full px-4 py-6 gap-6">
         {/* Channel sidebar */}
         <aside className="w-44 shrink-0">
@@ -109,6 +110,7 @@ export default async function ChatPage({
           myId={me.id}
           myName={me.name}
         />
+      </div>
       </div>
     </div>
   );

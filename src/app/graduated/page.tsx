@@ -9,11 +9,9 @@ export default async function GraduatedPage() {
     <PublicShell user={participant ? { name: participant.name, role: participant.role, groupId: participant.groupId } : null}>
     <div
       className="min-h-[60vh] flex flex-col items-center justify-center px-6 py-12"
-      style={{ background: "var(--bg-page)" }}
     >
       <div
-        className="max-w-lg w-full rounded-2xl border p-10 text-center"
-        style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="card-ean max-w-lg w-full p-10 text-center"
       >
         {/* Graduation cap */}
         <div className="text-6xl mb-5">🎓</div>

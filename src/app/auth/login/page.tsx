@@ -69,12 +69,12 @@ function LoginPageContent() {
 
   return (
     <div
-      className="min-h-[60vh] flex items-center justify-center px-4"
-      style={{ background: "var(--bg-page)" }}
+      className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20"
     >
       <div className="w-full max-w-sm">
-        <h1 className="mb-6 font-serif text-3xl" style={{ color: "var(--text-primary)" }}>
-          Sign in to the Intro Course
+        <span className="badge-ean mb-4">EA Netherlands Intro Course</span>
+        <h1 className="mb-6 font-serif text-4xl leading-tight" style={{ color: "var(--text-primary)" }}>
+          Sign in
         </h1>
 
         {/* Tabs */}
@@ -102,8 +102,7 @@ function LoginPageContent() {
           <>
             {status === "sent" ? (
               <div
-                className="rounded-xl p-6 text-center"
-                style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}
+                className="card-ean p-6 text-center"
               >
                 <div className="text-3xl mb-3">📬</div>
                 <h1 className="text-lg font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
@@ -124,8 +123,7 @@ function LoginPageContent() {
               </div>
             ) : (
               <div
-                className="rounded-xl p-6"
-                style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}
+                className="card-ean p-6"
               >
                 <h1 className="text-lg font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
                   Sign in
@@ -181,8 +179,7 @@ function LoginPageContent() {
         {/* --- Password login panel --- */}
         {tab === "password" && (
           <div
-            className="rounded-xl p-6"
-            style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}
+            className="card-ean p-6"
           >
             <h1 className="text-lg font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
               Sign in with password
@@ -241,13 +238,7 @@ function LoginPageContent() {
           </div>
         )}
 
-        <p className="mt-6 text-center text-xs" style={{ color: "var(--text-muted)" }}>
-          EA Netherlands ·{" "}
-          <Link href="/materials" className="underline hover:opacity-70 transition">
-            Browse materials
-          </Link>
-        </p>
-        <p className="mt-2 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+        <p className="mt-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
           Questions?{" "}
           <a
             href="mailto:programmes@effectiefaltruisme.nl"

@@ -54,7 +54,7 @@ function OnboardForm() {
 
   if (status === "done") {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+      <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
         <div className="max-w-md w-full text-center space-y-4">
           <div className="text-5xl">🎉</div>
           <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
@@ -76,7 +76,7 @@ function OnboardForm() {
   }
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-[60vh] flex items-center justify-center px-4 py-14 md:py-20">
       <div className="max-w-md w-full">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold mt-2" style={{ color: "var(--text-primary)", fontFamily: "var(--font-serif)" }}>
@@ -87,7 +87,7 @@ function OnboardForm() {
           </p>
         </div>
 
-        <form onSubmit={submit} className="space-y-6 rounded-2xl p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+        <form onSubmit={submit} className="card-ean space-y-6 p-6 sm:p-8">
           {/* Time slots */}
           <div>
             <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>

@@ -195,9 +195,10 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-screen graph-paper">
       <SiteHeader user={{ name: me.name, role: me.role, groupId: me.groupId }} />
 
+      <div className="page-column">
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
         {/* Title */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -488,6 +489,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
           )}
         </section>
       </main>
+      </div>
     </div>
   );
 }

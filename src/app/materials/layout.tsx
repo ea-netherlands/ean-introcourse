@@ -5,6 +5,11 @@ import { AuthBanner } from "@/components/auth-banner";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentParticipant } from "@/lib/auth";
 
+/**
+ * Lesson pages, laid out like the EAN quick course on effectiefaltruisme.nl:
+ * graph paper outside, a white 64rem column with dashed edges, a menu card on
+ * the left (lg and up) and the lesson next to it.
+ */
 export default async function MaterialsLayout({
   children,
 }: {
@@ -19,21 +24,22 @@ export default async function MaterialsLayout({
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-screen graph-paper">
       <SiteHeader
-        fullWidth
         user={participant ? { name: participant.name, role: participant.role, groupId: participant.groupId } : null}
       />
-      <div className="flex">
-        <Sidebar
-          weeks={weeks}
-          participant={participant ? { name: participant.name, groupId: participant.groupId, role: participant.role } : null}
-        />
+      <div className="page-column">
+        <div className="px-4 py-6 md:px-6 md:py-10 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10 lg:px-8 lg:py-12">
+          <Sidebar
+            weeks={weeks}
+            participant={participant ? { name: participant.name, groupId: participant.groupId, role: participant.role } : null}
+          />
 
-        <div className="flex-1 min-w-0 flex flex-col">
-          <MobileBar weeks={weeks} />
-          <AuthBanner hidden={!!participant} />
-          {children}
+          <div className="flex min-w-0 flex-col gap-4">
+            <MobileBar weeks={weeks} />
+            <AuthBanner hidden={!!participant} />
+            {children}
+          </div>
         </div>
       </div>
     </div>

@@ -72,9 +72,10 @@ export default async function SessionsPage() {
     });
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-screen graph-paper">
       <SiteHeader user={{ name: me.name, role: me.role, groupId: me.groupId }} />
 
+      <div className="page-column">
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-8">
         <div>
           <h1 className="text-2xl font-semibold" style={{ color: "var(--text-primary)" }}>Sessions</h1>
@@ -181,6 +182,7 @@ export default async function SessionsPage() {
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }

@@ -10,7 +10,9 @@ export function PublicShell({ children, user = null }: { children: ReactNode; us
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "var(--bg-page)" }}>
       <SiteHeader user={user} />
-      <main className="flex-1">{children}</main>
+      <main className="graph-paper flex-1">
+        <div className="page-column">{children}</div>
+      </main>
       <SiteFooter />
     </div>
   );

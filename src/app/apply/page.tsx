@@ -148,6 +148,16 @@ function ApplyPageContent() {
   // Step 4 — Details & consent
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  // Coming from the sign-in page with an unknown address: start with that address filled in.
+  useEffect(() => {
+    try {
+      const fromLogin = sessionStorage.getItem("ean_apply_email");
+      if (fromLogin) {
+        setEmail((cur) => cur || fromLogin);
+        sessionStorage.removeItem("ean_apply_email");
+      }
+    } catch {}
+  }, []);
   const [phone, setPhone] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [city, setCity] = useState("");

@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentParticipant } from "@/lib/auth";
 import { SiteHeader } from "@/components/site-header";
+import { FollowUpCard } from "@/components/follow-up-card";
 import {
   db,
   ensureMigrated,
@@ -106,6 +107,9 @@ export default async function AccountPage() {
             </div>
           </div>
         )}
+
+        {/* Done (graduated, or every lesson finished): invite to the follow-up form */}
+        {(me.status === "completed" || (totalLessons > 0 && completedCount === totalLessons)) && <FollowUpCard />}
 
         {/* Profile card */}
         <div

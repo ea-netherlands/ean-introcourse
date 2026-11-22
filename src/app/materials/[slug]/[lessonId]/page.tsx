@@ -14,6 +14,7 @@ import { LessonProgressTracker } from "@/components/lesson-progress-tracker";
 import { QuizForm } from "@/components/quiz-form";
 import { InterleaveExerciseForm } from "@/components/interleave-exercise-form";
 import { LessonComments } from "@/components/lesson-comments";
+import { FollowUpCard } from "@/components/follow-up-card";
 
 // ── Static params ─────────────────────────────────────────────────────────────
 
@@ -257,6 +258,9 @@ export default async function LessonPage({
           )}
         </div>
       </article>
+
+      {/* Last lesson of the course: point to the follow-up form */}
+      {!next && <FollowUpCard className="mt-6" />}
 
       {/* Cohort-wide discussion, as its own card under the lesson */}
       <div className="mt-6">

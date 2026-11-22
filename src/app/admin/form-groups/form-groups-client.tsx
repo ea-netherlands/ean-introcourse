@@ -282,10 +282,10 @@ export default function FormGroupsClient({
   // Fill the viewport: admin navbar=56px, main py-8 top+bottom=64px → 120px total offset.
   // Inner scrolling keeps the dark body from ever showing through.
   return (
-    <div style={{ height: "calc(100vh - 120px)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+    <div className="flex flex-col md:h-[calc(100vh-120px)] md:overflow-hidden">
 
       {/* ── Page title row ──────────────────────────────────────────────── */}
-      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid #e2e8f0", marginBottom: "16px" }}>
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3" style={{ paddingBottom: "12px", borderBottom: "1px solid #e2e8f0", marginBottom: "16px" }}>
         <div>
           <h1 style={{ fontSize: "18px", fontWeight: 600, color: "#0f172a", margin: 0 }}>Form Groups</h1>
           <p style={{ fontSize: "13px", color: "#64748b", margin: "2px 0 0" }}>Manage groups and assign participants based on availability.</p>
@@ -303,10 +303,10 @@ export default function FormGroupsClient({
       </div>
 
       {/* ── 3-panel layout ──────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", gap: 0 }}>
+      <div className="flex flex-1 flex-col gap-5 md:flex-row md:gap-0 md:overflow-hidden">
 
         {/* LEFT — Facilitators sidebar */}
-        <aside style={{ width: "190px", flexShrink: 0, overflowY: "auto", borderRight: "1px solid #e2e8f0", paddingRight: "16px", marginRight: "20px" }}>
+        <aside className="shrink-0 md:mr-5 md:w-[190px] md:overflow-y-auto md:border-r md:border-slate-200 md:pr-4">
           <p style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
             Facilitators ({facilitators.length})
           </p>
@@ -320,7 +320,7 @@ export default function FormGroupsClient({
         </aside>
 
         {/* RIGHT — Groups bar + Participants */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div className="flex min-w-0 flex-1 flex-col md:overflow-hidden">
 
           {/* Groups bar — never scrolls */}
           <div style={{ flexShrink: 0, paddingBottom: "12px", borderBottom: "1px solid #e2e8f0", marginBottom: "14px" }}>
@@ -411,7 +411,7 @@ export default function FormGroupsClient({
           </div>
 
           {/* Participants — scrolls internally */}
-          <div style={{ flex: 1, overflowY: "auto" }}>
+          <div className="flex-1 md:overflow-y-auto">
             <p style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
               Participants ({participants.length})
             </p>

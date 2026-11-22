@@ -230,7 +230,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <StatCard label="Students" value={String(members.length)} icon="👥" />
           <StatCard label="Avg. completion" value={`${avgCompletion}%`} icon="📊" />
           <StatCard label="Upcoming sessions" value={String(upcomingSessions.length)} icon="📅" />
@@ -335,7 +335,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
                     style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
                   >
                     {/* Top row: name + meta */}
-                    <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
                       <div className="flex items-center gap-3 min-w-0">
                         {/* Avatar */}
                         <span
@@ -355,7 +355,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
                       </div>
 
                       {/* Badges */}
-                      <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                      <div className="flex min-w-0 items-center gap-2 flex-wrap sm:justify-end">
                         {app?.city && (
                           <Badge icon="📍">{app.city}</Badge>
                         )}
@@ -539,11 +539,11 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
 function StatCard({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
     <div
-      className="rounded-2xl p-4 flex items-center gap-3"
+      className="rounded-2xl p-3 sm:p-4 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3 min-w-0"
       style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
     >
-      <span className="text-2xl">{icon}</span>
-      <div>
+      <span className="text-xl sm:text-2xl">{icon}</span>
+      <div className="min-w-0">
         <p className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>{value}</p>
         <p className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</p>
       </div>

@@ -2,6 +2,7 @@ import { db, participants, ensureMigrated } from "@/db";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { AddFacilitatorForm } from "./add-facilitator-form";
+import { ApproveButton } from "./approve-button";
 import { formatAvailabilitySlot, normalizeAvailability } from "@/lib/availability";
 
 export const dynamic = "force-dynamic";
@@ -87,6 +88,7 @@ export default async function FacilitatorsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
+                    {badge === "pending" && <ApproveButton id={f.id} />}
                     <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
                       badge === "active" ? "bg-green-50 text-green-700 border border-green-200" :
                       badge === "pending" ? "bg-amber-50 text-amber-700 border border-amber-200" :
@@ -110,8 +112,9 @@ export default async function FacilitatorsPage() {
 
       <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-500">
         <strong className="text-slate-700">Approving a facilitator:</strong>{" "}
-        Click "Edit →" next to a pending facilitator and change their status to "active"
-        using the participant edit page.
+        Click "Approve" next to a pending facilitator. They can then sign in with the password they
+        chose, or with a magic link. Facilitators you add yourself have no password: they sign in with
+        a magic link.
       </div>
     </div>
   );

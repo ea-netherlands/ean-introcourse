@@ -297,7 +297,8 @@ function ApplyPageContent() {
         language,
         availability: useSlots
           ? [
-              ...slotChoices.map((id) => slots?.find((x) => x.id === id)?.timing).filter((t): t is string => !!t),
+              // Two chosen groups can share a time: list each time once.
+              ...new Set(slotChoices.map((id) => slots?.find((x) => x.id === id)?.timing).filter((t): t is string => !!t)),
               ...(noneFit && noneFitText.trim() ? [`other: ${noneFitText.trim()}`] : []),
             ]
           : resolveOtherSlots(availability, availabilityOther),
@@ -337,7 +338,14 @@ function ApplyPageContent() {
           {useSlots && slotChoices[0] && (
             <p className="card-ean px-4 py-3 text-sm" style={{ color: "var(--text-secondary)" }}>
               We&apos;ve reserved a place for you in your 1st choice:{" "}
-              <strong>{slots?.find((x) => x.id === slotChoices[0])?.timingLabel}</strong>. You&apos;ll also find this in
+              <strong>
+                {(() => {
+                  const first = slots?.find((x) => x.id === slotChoices[0]);
+                  if (!first) return null;
+                  const shared = (slots ?? []).filter((x) => x.timingLabel === first.timingLabel).length > 1;
+                  return shared && first.name ? `${first.timingLabel} (${first.name})` : first.timingLabel;
+                })()}
+              </strong>. You&apos;ll also find this in
               the confirmation email.
             </p>
           )}

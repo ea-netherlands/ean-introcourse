@@ -5,10 +5,13 @@
  * the first click is their 1st choice (which reserves a place when they
  * submit), then 2nd and 3rd as back-ups. Clicking a chosen slot removes it.
  * "None of these times work for me" stays possible, with a free-text answer.
+ * Several groups can share a day & time: they are shown side by side and then
+ * also carry their group name so applicants can tell them apart.
  */
 
 export interface PublicSlot {
   id: string;
+  name?: string;
   timing: string | null;
   timingLabel: string;
   dates: string[];
@@ -56,6 +59,17 @@ export function SlotPicker({
     onChoicesChange([...choices, slot.id]);
   }
 
+  // Same day & time next to each other; name the groups when a time has more than one.
+  const perTiming = new Map<string, number>();
+  for (const s of slots) perTiming.set(s.timingLabel, (perTiming.get(s.timingLabel) ?? 0) + 1);
+  const firstSeen = new Map<string, number>();
+  slots.forEach((s, i) => { if (!firstSeen.has(s.timingLabel)) firstSeen.set(s.timingLabel, i); });
+  const grouped = [...slots].sort(
+    (a, b) =>
+      firstSeen.get(a.timingLabel)! - firstSeen.get(b.timingLabel)! ||
+      (a.dates[0] ?? "").localeCompare(b.dates[0] ?? "")
+  );
+
   return (
     <div className="space-y-3">
       <p className="text-xs" style={{ color: "var(--text-muted)" }}>
@@ -63,7 +77,8 @@ export function SlotPicker({
         away; your 2nd and 3rd choices help us if we need to move people around.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        {slots.map((s) => {
+        {grouped.map((s) => {
+          const shared = (perTiming.get(s.timingLabel) ?? 0) > 1;
           const rank = choices.indexOf(s.id);
           const chosen = rank >= 0;
           const disabled = !chosen && ((s.full && choices.length === 0) || choices.length >= 3);
@@ -86,6 +101,9 @@ export function SlotPicker({
                 </span>
               )}
               <p className="pr-20 font-serif text-lg" style={{ color: "var(--text-primary)" }}>{s.timingLabel}</p>
+              {shared && s.name && (
+                <p className="text-sm font-medium" style={{ color: "var(--color-ea-teal)" }}>{s.name}</p>
+              )}
               {s.dates.length > 0 && (
                 <p className="mt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
                   {s.dates.length} sessions: {s.dates.map(shortDate).join(", ")}

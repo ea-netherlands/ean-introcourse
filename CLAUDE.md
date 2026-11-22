@@ -99,8 +99,8 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 - Migrations are **hand-written** SQL in `drizzle/NNNN_*.sql` (`drizzle-kit generate` needs a TTY).
   Separate statements with `--> statement-breakpoint`; prefer `ADD COLUMN IF NOT EXISTS`.
   Every file **must** also be added by hand to `drizzle/meta/_journal.json` or it is silently skipped.
-- Existing: 0000–0011 (`0008_group_timing`, `0009_application_study_field`, `0010_lesson_comments`,
-  `0011_slot_booking`). Ignore the stray
+- Existing: 0000–0012 (`0008_group_timing`, `0009_application_study_field`, `0010_lesson_comments`,
+  `0011_slot_booking`, `0012_tracker`). Ignore the stray
   `0000_new_the_fallen.sql` (not in the journal). Production build runs `db:migrate` first.
 - `ensureMigrated()` caches per process → **restart the dev server after adding a migration**.
 - PGlite allows **one process**: stop the dev server before `npm run db:migrate`.
@@ -176,11 +176,19 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   header nav) embeds James's living Google Doc via its `/preview` URL, plus open/PDF links. Doc id in
   `src/lib/facilitator-guide.ts`, overridable with `FACILITATOR_GUIDE_DOC_ID`. The doc is shared
   "anyone with the link", so the page hides the link but the doc itself is not secret.
+- **Tracker** (was the "Checklists & trackers" spreadsheet; `src/lib/tracker.ts`, migration 0012): per group
+  attendance per week (`group_attendance`: present / partly / absent; partly = ½; % over the weeks marked;
+  Strong ≥ 80, Moderate ≥ 60, Weak below) and a facilitator checklist per moment of the course
+  (`group_checklist`, keys `task@phase`; tasks in `CHECKLIST_TASKS`, "Prepare the session" links to that
+  week's section of the facilitator guide via Google Docs heading ids in `GUIDE_WEEK_HEADINGS`). Filled in by
+  the group's facilitator on `/group/[groupId]/overview#tracker` (`GroupTracker` component); the guide page
+  shows their open tasks for the current moment; admins see/correct every group at `/admin/tracker`.
+  API `PUT /api/group/[groupId]/tracker` (facilitator of the group, role admin, or admin cookie).
 - **Facilitator:** `/sessions` plan sessions (repeat 1–8 weeks, per-session descriptions,
   optional auto-created Google Meet); `/group/[groupId]/overview` student progress + answers.
 - **Admin:** `/admin` dashboard with the step-by-step "How to run an Intro Course round" guide
   (`src/app/admin/course-guide.tsx`; keep it in step with the admin pages). Nav: Applications | Groups |
-  Participants | Facilitators | Sessions. Applications (bulk accept/reject, delete); participants (table with
+  Tracker | Participants | Facilitators | Sessions. Applications (bulk accept/reject, delete); participants (table with
   bulk select/delete, prev/next on detail, CSV export); **groups** = one page per cohort (`?cohort=`, picker
   + "New cohort") with tab **Set up** (`group-setup.tsx`: slot settings, name, close/reactivate, delete when
   empty; closing marks its participants completed, not its facilitator) and tab **Assign people**

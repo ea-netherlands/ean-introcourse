@@ -146,6 +146,9 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   field (stored as "Other: …"); students answer field of study (`applications.study_field`)
   instead of occupation/work area. Accepted applicants get a 7-day `/onboard?token=` link to
   confirm availability and set a password; finished participants are sent to `/graduated`.
+- **Apply draft:** `/apply` keeps the answers (not the privacy tick) in localStorage (`ean_apply_draft`)
+  while someone fills it in, restores them after a refresh or closed tab (with a "Start over" link) and
+  clears them after a successful submit.
 - **Follow-up form:** finished participants are invited to the EAN Fellowship Typeform
   (`FOLLOW_UP_FORM_URL` in `src/components/follow-up-card.tsx`) on `/graduated`, on `/account` (status
   completed or all lessons done) and under the last lesson.

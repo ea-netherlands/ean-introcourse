@@ -1,7 +1,7 @@
 /**
- * /admin — dashboard with live stats (Stage 6)
+ * /admin — dashboard: live stats, the step-by-step guide to running a round, quick actions
  */
-import { Card } from "@/components/ui";
+import { CourseGuide } from "./course-guide";
 import Link from "next/link";
 import { db, ensureMigrated, participants, groups, fellowshipSessions, sessionAttendance } from "@/db";
 import { eq, count, sql } from "drizzle-orm";
@@ -48,33 +48,6 @@ export default async function AdminHome() {
   const attendanceRate =
     totalAttendanceRows > 0 ? Math.round((attendedRows / totalAttendanceRows) * 100) : null;
 
-  const sections = [
-    {
-      href: "/admin/participants",
-      title: "Participants",
-      description: "View progress, exercise answers, and send magic links.",
-      stage: "Stage 2",
-    },
-    {
-      href: "/admin/groups",
-      title: "Groups",
-      description: "Manage cohorts and assign participants to groups.",
-      stage: "Stage 2",
-    },
-    {
-      href: "/admin/applications",
-      title: "Applications",
-      description: "Review sign-up applications and accept or reject them.",
-      stage: "Stage 4",
-    },
-    {
-      href: "/admin/sessions",
-      title: "Sessions",
-      description: "Schedule group sessions, send calendar invites, track attendance.",
-      stage: "Stage 5",
-    },
-  ];
-
   return (
     <div>
       <h1 className="text-2xl text-slate-900 mb-1">Fellowship Admin</h1>
@@ -94,21 +67,9 @@ export default async function AdminHome() {
         />
       </div>
 
-      {/* Section cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {sections.map((s) => (
-          <Link key={s.href} href={s.href} className="group block">
-            <Card className="h-full group-hover:border-teal-200 transition-colors">
-              <div className="flex items-start justify-between mb-2">
-                <h2 className="text-base font-medium text-slate-800">{s.title}</h2>
-                <span className="text-xs text-slate-400 bg-slate-100 rounded px-1.5 py-0.5">
-                  {s.stage}
-                </span>
-              </div>
-              <p className="text-sm text-slate-500">{s.description}</p>
-            </Card>
-          </Link>
-        ))}
+      {/* Step-by-step guide to running a round */}
+      <div className="mb-8">
+        <CourseGuide />
       </div>
 
       {/* Quick actions */}

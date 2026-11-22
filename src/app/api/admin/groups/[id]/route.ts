@@ -68,7 +68,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     if (fac && !fac.groupId) {
       await db.update(participants).set({ groupId: id }).where(eq(participants.id, fac.id));
     } else if (fac && fac.groupId !== id) {
-      facilitatorNote = "This facilitator is still assigned to another group; move them in Form Groups if they should lead this one.";
+      facilitatorNote = "This facilitator is still assigned to another group; move them under Groups → Assign people if they should lead this one.";
     }
   }
   if (facilitatorNote) return NextResponse.json({ ok: true, note: facilitatorNote });

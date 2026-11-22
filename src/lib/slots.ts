@@ -37,6 +37,7 @@ export interface SlotView {
   remaining: number | null; // null = no capacity set (unlimited)
   bookable: boolean;
   active: boolean;
+  cohort: string | null;
   facilitator: { id: string; name: string; avatarUrl: string | null } | null;
 }
 
@@ -57,8 +58,11 @@ async function bookedCounts(slotIds: string[]): Promise<Map<string, number>> {
   return new Map(rows.map((r) => [r.slotId as string, r.n]));
 }
 
-/** Slots for the admin page (all active groups) or for /apply (bookable only). */
-export async function listSlots(opts: { bookableOnly: boolean }): Promise<SlotView[]> {
+/**
+ * Slots for the admin page (all active groups; with includeClosed also closed ones) or for
+ * /apply (bookable only).
+ */
+export async function listSlots(opts: { bookableOnly: boolean; includeClosed?: boolean }): Promise<SlotView[]> {
   await ensureMigrated();
   const rows = await db
     .select({
@@ -72,6 +76,7 @@ export async function listSlots(opts: { bookableOnly: boolean }): Promise<SlotVi
       capacity: groups.capacity,
       bookable: groups.bookable,
       active: groups.active,
+      cohort: groups.cohort,
       createdAt: groups.createdAt,
       facilitatorId: participants.id,
       facilitatorName: participants.name,
@@ -79,7 +84,13 @@ export async function listSlots(opts: { bookableOnly: boolean }): Promise<SlotVi
     })
     .from(groups)
     .leftJoin(participants, eq(participants.id, groups.facilitatorId))
-    .where(opts.bookableOnly ? and(eq(groups.active, true), eq(groups.bookable, true)) : eq(groups.active, true))
+    .where(
+      opts.bookableOnly
+        ? and(eq(groups.active, true), eq(groups.bookable, true))
+        : opts.includeClosed
+          ? undefined
+          : eq(groups.active, true)
+    )
     .orderBy(groups.createdAt);
   const counts = await bookedCounts(rows.map((r) => r.id));
   return rows.map((r) => {
@@ -98,6 +109,7 @@ export async function listSlots(opts: { bookableOnly: boolean }): Promise<SlotVi
       remaining: r.capacity == null ? null : Math.max(0, r.capacity - booked),
       bookable: r.bookable,
       active: r.active,
+      cohort: r.cohort,
       facilitator: r.facilitatorId ? { id: r.facilitatorId, name: r.facilitatorName ?? "", avatarUrl: r.facilitatorAvatar } : null,
     };
   });

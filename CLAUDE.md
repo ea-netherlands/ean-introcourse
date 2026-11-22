@@ -122,6 +122,13 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 - Accounts with status `pending` cannot sign in by either method (no link is sent, and
   `/auth/verify` re-checks). Magic links are rate-limited to 3 per address per 15 min (counted in
   `email_log`).
+- Forgot password: `/auth/forgot-password` → `/api/auth/forgot-password` emails a one-time link (a
+  `login_tokens` token, 30 min, max 3 per 15 min, kind `password_reset`) to `/auth/reset-password`,
+  which sets the password via `/api/auth/reset-password`, deletes the person's other sessions and signs
+  them in. The login form remembers the last email + method in localStorage (`ean_last_login`) and has
+  name/autocomplete attributes so password managers save it.
+- Sign out: `POST /auth/logout` must redirect with **303** (a 307 repeats the POST on `/auth/login`,
+  which is static in production and answers 405).
 - Facilitators sign up at `/facilitator/signup` (status pending) and need admin approval
   (status → active) before they can log in. Admins can also add them at `/admin/facilitators`.
 - Group pages/APIs use `canAccessGroup()` (`src/lib/auth.ts`): you only see the group in your own
@@ -139,6 +146,9 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   field (stored as "Other: …"); students answer field of study (`applications.study_field`)
   instead of occupation/work area. Accepted applicants get a 7-day `/onboard?token=` link to
   confirm availability and set a password; finished participants are sent to `/graduated`.
+- **Apply draft:** `/apply` keeps the answers (not the privacy tick) in localStorage (`ean_apply_draft`)
+  while someone fills it in, restores them after a refresh or closed tab (with a "Start over" link) and
+  clears them after a successful submit.
 - **Follow-up form:** finished participants are invited to the EAN Fellowship Typeform
   (`FOLLOW_UP_FORM_URL` in `src/components/follow-up-card.tsx`) on `/graduated`, on `/account` (status
   completed or all lessons done) and under the last lesson.
@@ -149,7 +159,7 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   `lesson_responses`. `/account` (profile, upcoming sessions + calendar links), `/chat`
   (General + My group), `/group/[groupId]`.
 - **Slot booking:** a slot is a group with `dates`, `facilitator_id`, `language`, `format` (+ `location`),
-  `capacity` and `bookable` (migration 0011). Admin sets them at `/admin/slots`. On `/apply` step 3
+  `capacity` and `bookable` (migration 0011). Admin sets them at `/admin/groups` (tab Set up). On `/apply` step 3
   applicants pick up to 3 slots in order (`SlotPicker`); the **1st choice books a place immediately**
   (`applications.slot_id`, claimed inside a transaction with `SELECT … FOR UPDATE` in
   `src/lib/slots.ts`), 2nd/3rd are back-ups (`slot_choice_2/3`). "None of these times" stays possible.
@@ -168,13 +178,19 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   "anyone with the link", so the page hides the link but the doc itself is not secret.
 - **Facilitator:** `/sessions` plan sessions (repeat 1–8 weeks, per-session descriptions,
   optional auto-created Google Meet); `/group/[groupId]/overview` student progress + answers.
-- **Admin:** `/admin` dashboard, applications (bulk accept/reject, delete), participants
-  (table with bulk select/delete, prev/next on detail, CSV export), groups (timing,
-  activate/deactivate — deactivating marks its participants completed, not its facilitator — delete when empty), full-page
-  form-groups matcher, facilitators (approve, add directly), sessions (+ attendance, facilitator shown).
+- **Admin:** `/admin` dashboard with the step-by-step "How to run an Intro Course round" guide
+  (`src/app/admin/course-guide.tsx`; keep it in step with the admin pages). Nav: Applications | Groups |
+  Participants | Facilitators | Sessions. Applications (bulk accept/reject, delete); participants (table with
+  bulk select/delete, prev/next on detail, CSV export); **groups** = one page per cohort (`?cohort=`, picker
+  + "New cohort") with tab **Set up** (`group-setup.tsx`: slot settings, name, close/reactivate, delete when
+  empty; closing marks its participants completed, not its facilitator) and tab **Assign people**
+  (`assign-people.tsx`, the old Form Groups matcher, limited to people without a group or in this cohort).
+  `/admin/slots` and `/admin/form-groups` redirect there. Facilitators (one-click Approve, add directly);
+  sessions (+ attendance, facilitator shown). Status changes report failures (e.g. expired admin session)
+  instead of a false "Saved".
 - **Emails** (`src/lib/email.ts`; always `escapeHtml()` user text): application received (+ notice
   to `ADMIN_EMAIL`), acceptance, rejection (from the owner's "process & templates" docx), magic
-  link (self-requested and admin-sent), admin forgot-password, and 24h session reminders from
+  link (self-requested and admin-sent), password reset, admin forgot-password, and 24h session reminders from
   `cron/daily` (one per attendee, tracked in `session_attendance.invite_sent_at`; needs
   `CRON_SECRET` in production).
 - **Google Meet:** `src/lib/google-calendar.ts` (pure `crypto` + fetch — NOT `google-auth-library`,
@@ -186,7 +202,7 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 
 One vocabulary everywhere: `src/lib/availability.ts` (`monday_1730`, `monday_1930`,
 `thursday_1730`, `thursday_1930`, plus `other` on the apply form). Used by `/apply`, `/onboard`,
-`groups.timing`, Form Groups matching and all admin labels. Legacy values (`early_monday`…,
+`groups.timing`, the Assign people matcher and all admin labels. Legacy values (`early_monday`…,
 `monday_early`…) are translated by `normalizeSlot()` — don't add new vocabularies.
 
 ## Gotchas
@@ -208,7 +224,7 @@ One vocabulary everywhere: `src/lib/availability.ts` (`monday_1730`, `monday_193
    verification for the From address, optional `GOOGLE_*` vars + domain-wide delegation,
    a new `ADMIN_PASSWORD`.
 2. No dedicated privacy page (apply links to effectiefaltruisme.nl/privacy).
-3. Smaller gaps: no participant forgot-password; avatar is a URL, no upload; saved quiz answers
+3. Smaller gaps: avatar is a URL, no upload; saved quiz answers
    aren't reloaded on revisit; `/api/materials/complete` is a stub; unused
    `exercise-form.tsx`/`lesson-exercise-form.tsx`; facilitators have no availability of their own;
    lesson pages are readable without logging in.

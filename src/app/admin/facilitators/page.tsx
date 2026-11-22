@@ -43,14 +43,14 @@ export default async function FacilitatorsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Facilitators</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {facilitators.length} facilitator{facilitators.length !== 1 ? "s" : ""} total
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-3">
           <a
             href="/facilitator/signup"
             target="_blank"
@@ -79,7 +79,7 @@ export default async function FacilitatorsPage() {
             </h2>
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
               {items.map((f) => (
-                <div key={f.id} className="flex items-center gap-4 px-4 py-3">
+                <div key={f.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-800">{f.name}</p>
                     <p className="text-xs text-slate-400">{f.email}</p>
@@ -87,7 +87,7 @@ export default async function FacilitatorsPage() {
                       <SlotPills slots={(f.availability as string[] | null) ?? []} />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex flex-wrap items-center gap-3">
                     {badge === "pending" && <ApproveButton id={f.id} />}
                     <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
                       badge === "active" ? "bg-green-50 text-green-700 border border-green-200" :

@@ -95,6 +95,8 @@ const HEARD_ABOUT_OPTIONS = [
 
 const TOTAL_STEPS = 4;
 
+const DRAFT_KEY = "ean_apply_draft";
+
 function ApplyPageContent() {
   const [step, setStep] = useState(1);
 
@@ -167,6 +169,61 @@ function ApplyPageContent() {
 
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+
+  // ── Draft ────────────────────────────────────────────────────────────────
+  // Answers are kept in this browser (localStorage) while someone fills in the form, so a refresh
+  // or an accidentally closed tab doesn't lose them. Cleared after a successful submit or
+  // "Start over". Nothing is sent anywhere until they submit.
+  const draft = {
+    step, mainReason, mainReasonOther, promptedBy,
+    educationLevel, educationLevelOther, careerStage, occupation, occupationOther, workArea, workAreaOther,
+    studyField, studyFieldOther, motivation,
+    language, availability, availabilityOther, onlinePreference, slotChoices, noneFit, noneFitText,
+    name, email, phone, linkedinUrl, city, heardAbout, heardAboutOther,
+  };
+  const [draftReady, setDraftReady] = useState(false);
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      const d = raw ? (JSON.parse(raw) as Partial<typeof draft>) : null;
+      if (d && typeof d === "object") {
+        const str = (v: unknown) => (typeof v === "string" ? v : undefined);
+        const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : undefined);
+        const strings: [unknown, (v: string) => void][] = [
+          [d.mainReasonOther, setMainReasonOther], [d.promptedBy, setPromptedBy],
+          [d.educationLevel, setEducationLevel], [d.educationLevelOther, setEducationLevelOther],
+          [d.careerStage, setCareerStage], [d.occupation, setOccupation], [d.occupationOther, setOccupationOther],
+          [d.workArea, setWorkArea], [d.workAreaOther, setWorkAreaOther], [d.studyField, setStudyField],
+          [d.studyFieldOther, setStudyFieldOther], [d.motivation, setMotivation], [d.language, setLanguage],
+          [d.availabilityOther, setAvailabilityOther], [d.onlinePreference, setOnlinePreference],
+          [d.noneFitText, setNoneFitText], [d.name, setName], [d.phone, setPhone], [d.linkedinUrl, setLinkedinUrl],
+          [d.city, setCity], [d.heardAbout, setHeardAbout], [d.heardAboutOther, setHeardAboutOther],
+        ];
+        for (const [v, set] of strings) { const x = str(v); if (x) set(x); }
+        const em = str(d.email);
+        if (em) setEmail((cur) => cur || em);
+        const mr = arr(d.mainReason); if (mr?.length) setMainReason(mr.slice(0, 2));
+        const av = arr(d.availability); if (av?.length) setAvailability(av);
+        const sc = arr(d.slotChoices); if (sc?.length) setSlotChoices(sc.slice(0, 3));
+        if (d.noneFit === true) setNoneFit(true);
+        if (typeof d.step === "number" && d.step >= 1 && d.step <= TOTAL_STEPS) setStep(Math.floor(d.step));
+        const meaningful = Object.entries(d).some(([k, v]) => k !== "step" && (Array.isArray(v) ? v.length > 0 : !!v));
+        if (meaningful) setRestored(true);
+      }
+    } catch {}
+    setDraftReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const draftJson = JSON.stringify(draft);
+  useEffect(() => {
+    if (!draftReady || status === "done") return;
+    try { localStorage.setItem(DRAFT_KEY, draftJson); } catch {}
+  }, [draftJson, draftReady, status]);
+  function startOver() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+    window.location.reload();
+  }
 
   function toggleMainReason(opt: string) {
     setMainReason((prev) => {
@@ -251,6 +308,7 @@ function ApplyPageContent() {
       }),
     });
     if (res.ok) {
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
       setStatus("done");
     } else {
       const j = await res.json().catch(() => ({}));
@@ -307,6 +365,19 @@ function ApplyPageContent() {
             5 weeks · weekly 75-minute online discussions · about 3.5 hours of prep a week · free
           </p>
         </div>
+
+        {restored && (
+          <div
+            role="status"
+            className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm"
+            style={{ background: "rgba(22,135,156,0.08)", border: "1px solid rgba(22,135,156,0.3)", color: "var(--text-primary)" }}
+          >
+            <span>We kept the answers you filled in earlier, so you can continue where you left off.</span>
+            <button type="button" onClick={startOver} className="text-xs font-medium underline" style={{ color: "var(--color-ea-teal)" }}>
+              Start over
+            </button>
+          </div>
+        )}
 
         {/* Progress bar */}
         <div className="flex gap-1.5 mb-6">

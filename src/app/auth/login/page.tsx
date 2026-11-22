@@ -13,6 +13,7 @@ const CONTACT_EMAIL = "programmes@effectiefaltruisme.nl";
  * again. sessionStorage (not the URL) keeps the address out of logs and browser history.
  */
 const APPLY_EMAIL_KEY = "ean_apply_email";
+const LAST_LOGIN_KEY = "ean_last_login";
 function rememberEmailForApply(email: string) {
   try {
     if (email.trim()) sessionStorage.setItem(APPLY_EMAIL_KEY, email.trim().toLowerCase());
@@ -98,6 +99,21 @@ function LoginPageContent() {
   const [pwStatus, setPwStatus] = useState<"idle" | "sending" | "error">("idle");
   const [pwError, setPwError] = useState("");
 
+  // Remember the last email and sign-in method in this browser, so returning people don't
+  // have to type it again (the password itself is left to the browser's password manager).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LAST_LOGIN_KEY);
+      if (!saved) return;
+      const { email: e, tab: t } = JSON.parse(saved) as { email?: string; tab?: Tab };
+      if (e) { setEmail((cur) => cur || e); setPwEmail((cur) => cur || e); }
+      if (t === "magic" || t === "password") setTab(t);
+    } catch {}
+  }, []);
+  function rememberLogin(e: string, t: Tab) {
+    try { localStorage.setItem(LAST_LOGIN_KEY, JSON.stringify({ email: e.trim().toLowerCase(), tab: t })); } catch {}
+  }
+
   async function handleMagicLink(e: FormEvent) {
     e.preventDefault();
     setStatus("sending");
@@ -118,6 +134,7 @@ function LoginPageContent() {
         setStatus("idle");
       } else {
         setStatus("sent");
+        rememberLogin(email, "magic");
       }
     } catch {
       setErrorMsg("Network error. Please try again.");
@@ -140,6 +157,7 @@ function LoginPageContent() {
         setPwError(data.error ?? "Invalid email or password.");
         setPwStatus("error");
       } else {
+        rememberLogin(pwEmail, "password");
         // Cookie is set on this response; navigate to the redirect target
         window.location.href = data.redirect ?? "/";
       }
@@ -214,7 +232,7 @@ function LoginPageContent() {
                   Enter your email and we'll send you a sign-in link.
                 </p>
 
-                <form onSubmit={handleMagicLink} className="space-y-4">
+                <form onSubmit={handleMagicLink} method="post" className="space-y-4">
                   <div>
                     <label
                       htmlFor="email"
@@ -225,7 +243,9 @@ function LoginPageContent() {
                     </label>
                     <input
                       id="email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
                       required
                       value={email}
                       onChange={(e) => { setEmail(e.target.value); setNotice(null); }}
@@ -272,18 +292,20 @@ function LoginPageContent() {
               For participants who set a password during onboarding, or facilitators.
             </p>
 
-            <form onSubmit={handlePasswordLogin} className="space-y-4">
+            <form onSubmit={handlePasswordLogin} method="post" className="space-y-4">
               {[
-                { label: "Email address", id: "pw-email", type: "email", value: pwEmail, onChange: setPwEmail, placeholder: "you@example.com" },
-                { label: "Password", id: "pw-password", type: "password", value: pwPassword, onChange: setPwPassword, placeholder: "Your password" },
-              ].map(({ label, id, type, value, onChange, placeholder }) => (
+                { label: "Email address", id: "pw-email", name: "username", type: "email", autoComplete: "username", value: pwEmail, onChange: setPwEmail, placeholder: "you@example.com" },
+                { label: "Password", id: "pw-password", name: "password", type: "password", autoComplete: "current-password", value: pwPassword, onChange: setPwPassword, placeholder: "Your password" },
+              ].map(({ label, id, name, type, autoComplete, value, onChange, placeholder }) => (
                 <div key={id}>
                   <label htmlFor={id} className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
                     {label}
                   </label>
                   <input
                     id={id}
+                    name={name}
                     type={type}
+                    autoComplete={autoComplete}
                     required
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
@@ -322,6 +344,11 @@ function LoginPageContent() {
               >
                 {pwStatus === "sending" ? "Signing in…" : "Sign in"}
               </button>
+              <p className="text-center text-sm">
+                <Link href="/auth/forgot-password" className="text-ea-teal underline underline-offset-2">
+                  Forgot your password?
+                </Link>
+              </p>
             </form>
 
             <p className="mt-4 text-center text-xs" style={{ color: "var(--text-muted)" }}>

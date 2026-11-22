@@ -59,7 +59,12 @@ function isCompatible(person: Person, group: Group): boolean {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function FormGroupsClient({
+/**
+ * "Assign people" tab of /admin/groups: put participants and facilitators of one cohort into
+ * its groups, matched on availability, language and online preference. Assignments are kept
+ * locally until "Save assignments". (Was the separate Form Groups page.)
+ */
+export default function AssignPeople({
   participants, facilitators, groups: initialGroups,
 }: {
   participants: Person[];
@@ -82,6 +87,7 @@ export default function FormGroupsClient({
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   // New-group form
   const [showNewGroup, setShowNewGroup] = useState(false);
@@ -103,16 +109,26 @@ export default function FormGroupsClient({
 
   async function saveAssignments() {
     setSaving(true);
-    await Promise.all(
+    setSaveError("");
+    const results = await Promise.all(
       Object.entries(assignments).map(([id, groupId]) =>
         fetch(`/api/admin/participants/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ groupId: groupId || null }),
-        })
+        }).catch(() => null)
       )
     );
     setSaving(false);
+    const failed = results.filter((r) => !r || !r.ok);
+    if (failed.length) {
+      setSaveError(
+        failed.some((r) => r?.status === 401)
+          ? "Not saved: your admin session expired. Reload the page and sign in again."
+          : `${failed.length} assignment(s) could not be saved. Please try again.`
+      );
+      return;
+    }
     setSaved(true);
     router.refresh();
   }
@@ -282,14 +298,14 @@ export default function FormGroupsClient({
   // Fill the viewport: admin navbar=56px, main py-8 top+bottom=64px → 120px total offset.
   // Inner scrolling keeps the dark body from ever showing through.
   return (
-    <div className="flex flex-col md:h-[calc(100vh-120px)] md:overflow-hidden">
+    <div className="flex flex-col md:h-[calc(100vh-250px)] md:min-h-[28rem] md:overflow-hidden">
 
       {/* ── Page title row ──────────────────────────────────────────────── */}
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3" style={{ paddingBottom: "12px", borderBottom: "1px solid #e2e8f0", marginBottom: "16px" }}>
-        <div>
-          <h1 style={{ fontSize: "18px", fontWeight: 600, color: "#0f172a", margin: 0 }}>Form Groups</h1>
-          <p style={{ fontSize: "13px", color: "#64748b", margin: "2px 0 0" }}>Manage groups and assign participants based on availability.</p>
-        </div>
+        <p style={{ fontSize: "13px", color: "#64748b", margin: 0, maxWidth: "36rem" }}>
+          Pick a group for each person. Groups that match their availability are listed first. Accepted
+          applicants who booked a group are already in it. Nothing changes until you press Save.
+        </p>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <button
             onClick={saveAssignments}
@@ -299,6 +315,7 @@ export default function FormGroupsClient({
             {saving ? "Saving…" : "Save assignments"}
           </button>
           {saved && <span style={{ fontSize: "13px", color: "#16a34a" }}>✓ Saved</span>}
+          {saveError && <span style={{ fontSize: "13px", color: "#dc2626" }}>{saveError}</span>}
         </div>
       </div>
 
@@ -329,12 +346,7 @@ export default function FormGroupsClient({
               <p style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
                 Active groups ({activeGroups.length})
               </p>
-              <button
-                onClick={() => setShowNewGroup((v) => !v)}
-                style={{ fontSize: "12px", color: "#0d9488", fontWeight: 500, background: "none", border: "none", cursor: "pointer" }}
-              >
-                {showNewGroup ? "✕ Cancel" : "+ New group"}
-              </button>
+              <span style={{ fontSize: "12px", color: "#94a3b8" }}>New groups: use the Set up tab</span>
             </div>
 
             {/* New group form */}

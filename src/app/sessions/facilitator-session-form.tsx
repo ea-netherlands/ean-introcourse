@@ -3,7 +3,39 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-interface Group { id: string; name: string }
+interface Group {
+  id: string;
+  name: string;
+  /** e.g. "monday_1930" (Groups → Set up) */
+  timing?: string | null;
+  /** the group's session dates, YYYY-MM-DD */
+  dates?: string[];
+  /** local YYYY-MM-DD days that already have a session */
+  plannedDays?: string[];
+}
+
+const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const pad = (n: number) => String(n).padStart(2, "0");
+const localDay = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+/**
+ * Default "Date & time" for a group: its next session date without a session yet, at the
+ * group's time; without dates, the next matching weekday at that time. "" if no time is set.
+ */
+function defaultWhen(group?: Group, alsoPlanned: string[] = []): string {
+  const m = group?.timing?.match(/^([a-z]+)_(\d{2})(\d{2})$/);
+  if (!group || !m) return "";
+  const time = `${m[2]}:${m[3]}`;
+  const today = localDay(new Date());
+  const planned = new Set([...(group.plannedDays ?? []), ...alsoPlanned]);
+  const next = (group.dates ?? []).filter((d) => d >= today && !planned.has(d)).sort()[0];
+  if (next) return `${next}T${time}`;
+  const wd = WEEKDAYS.indexOf(m[1]);
+  if (wd < 0) return "";
+  const d = new Date();
+  d.setDate(d.getDate() + ((wd - d.getDay() + 7) % 7 || 7));
+  return `${localDay(d)}T${time}`;
+}
 interface Facilitator { id: string; name: string }
 
 export function FacilitatorSessionForm({
@@ -25,7 +57,8 @@ export function FacilitatorSessionForm({
     defaultGroupId && groups.some((g) => g.id === defaultGroupId) ? defaultGroupId : groups[0]?.id ?? ""
   );
   const [facilitatorId, setFacilitatorId] = useState(defaultFacilitatorId ?? "");
-  const [scheduledAt, setScheduledAt] = useState("");
+  const [scheduledAt, setScheduledAt] = useState(() => defaultWhen(groups.find((g) => g.id === groupId)));
+  const currentGroup = groups.find((g) => g.id === groupId);
   const [createMeet, setCreateMeet] = useState(googleConfigured);
   const [meetLink, setMeetLink] = useState("");
   const [agenda, setAgenda] = useState(""); // used when repeatWeeks === 1
@@ -96,7 +129,8 @@ export function FacilitatorSessionForm({
       }
       setCreated(ids);
       setTitle("");
-      setScheduledAt("");
+      // Move on to the group's next free date (the ones just created count as planned).
+      setScheduledAt(defaultWhen(currentGroup, dates.map((d) => localDay(new Date(d)))));
       setMeetLink("");
       setAgenda("");
       setSessionAgendas([""]);
@@ -158,6 +192,11 @@ export function FacilitatorSessionForm({
             className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
             style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
           />
+          {currentGroup?.timing && (
+            <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+              Filled in with {currentGroup.name}&apos;s next session date and time; change it if needed.
+            </p>
+          )}
         </div>
         {groups.length > 1 && (
           <div>
@@ -165,7 +204,10 @@ export function FacilitatorSessionForm({
             <select
               required
               value={groupId}
-              onChange={(e) => setGroupId(e.target.value)}
+              onChange={(e) => {
+                setGroupId(e.target.value);
+                setScheduledAt(defaultWhen(groups.find((g) => g.id === e.target.value)));
+              }}
               className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
               style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
             >

@@ -29,7 +29,9 @@ export default async function SessionsPage() {
   const isAdmin = me.role === "admin";
 
   // Get all groups (admin) or the groups this facilitator leads (can be several)
-  const allGroups = await db.select({ id: groups.id, name: groups.name }).from(groups);
+  const allGroups = await db
+    .select({ id: groups.id, name: groups.name, timing: groups.timing, dates: groups.dates })
+    .from(groups);
   const ownGroupIds = new Set((await myGroups(me)).map((g) => g.id));
 
   // Get all facilitators for the form
@@ -94,7 +96,16 @@ export default async function SessionsPage() {
             Schedule a new session
           </h2>
           <FacilitatorSessionForm
-            groups={isAdmin ? allGroups : allGroups.filter((g) => ownGroupIds.has(g.id))}
+            groups={(isAdmin ? allGroups : allGroups.filter((g) => ownGroupIds.has(g.id))).map((g) => ({
+              id: g.id,
+              name: g.name,
+              timing: g.timing,
+              dates: Array.isArray(g.dates) ? (g.dates as string[]) : [],
+              // Days that already have a session, so the default date skips them (Amsterdam time).
+              plannedDays: sessionRows
+                .filter((x) => x.groupId === g.id)
+                .map((x) => x.scheduledAt.toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" })),
+            }))}
             facilitators={facilitators}
             defaultGroupId={me.groupId ?? ""}
             defaultFacilitatorId={me.id}

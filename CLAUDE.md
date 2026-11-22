@@ -100,7 +100,7 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   Separate statements with `--> statement-breakpoint`; prefer `ADD COLUMN IF NOT EXISTS`.
   Every file **must** also be added by hand to `drizzle/meta/_journal.json` or it is silently skipped.
 - Existing: 0000–0012 (`0008_group_timing`, `0009_application_study_field`, `0010_lesson_comments`,
-  `0011_slot_booking`, `0012_tracker`). Ignore the stray
+  `0011_slot_booking`, `0012_tracker`, `0013_clean_cohorts`). Ignore the stray
   `0000_new_the_fallen.sql` (not in the journal). Production build runs `db:migrate` first.
 - `ensureMigrated()` caches per process → **restart the dev server after adding a migration**.
 - PGlite allows **one process**: stop the dev server before `npm run db:migrate`.
@@ -131,8 +131,11 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   which is static in production and answers 405).
 - Facilitators sign up at `/facilitator/signup` (status pending) and need admin approval
   (status → active) before they can log in. Admins can also add them at `/admin/facilitators`.
-- Group pages/APIs use `canAccessGroup()` (`src/lib/auth.ts`): you only see the group in your own
-  `participants.groupId`; role `admin` sees all. Facilitators are assigned to a group the same way.
+- Group pages/APIs use `await canAccessGroup()` (`src/lib/auth.ts`, **async** — never call it without
+  `await`, a Promise is truthy): participants only see their own `participants.groupId`; facilitators
+  also every group they lead (`groups.facilitator_id`, set under Groups → Set up), so one facilitator can
+  lead several groups; role `admin` sees all. `myGroups(me)` lists them (primary group first) for the chat
+  channels, the Overview switcher, the facilitator Sessions page and the guide-page checklists.
 - Admin: one shared password from `ADMIN_PASSWORD`; the cookie `ean_admin_session` is a signed,
   8-hour session made and checked in `src/lib/admin-session.ts` (Web Crypto, so it also runs in
   middleware); `DELETE /api/admin/auth` logs out. `src/middleware.ts` protects `/admin/*`
@@ -157,7 +160,8 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
 - **Participant:** `/materials/[slug]/[lessonId]` with progress bar, quizzes (locked after submit,
   score + explanations) and exercises; answers saved via `/api/exercises/submit` →
   `lesson_responses`. `/account` (profile, upcoming sessions + calendar links), `/chat`
-  (General + My group), `/group/[groupId]`.
+  (the one chat for everyone: General + a channel per group, `?g=<groupId>`; switching shows a spinner and
+  dims the messages). `/group/[groupId]` (the old message board) forwards to `/chat?g=`.
 - **Slot booking:** a slot is a group with `dates`, `facilitator_id`, `language`, `format` (+ `location`),
   `capacity` and `bookable` (migration 0011). Admin sets them at `/admin/groups` (tab Set up). On `/apply` step 3
   applicants pick up to 3 slots in order (`SlotPicker`); the **1st choice books a place immediately**
@@ -194,7 +198,8 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   empty; closing marks its participants completed, not its facilitator) and tab **Assign people**
   (`assign-people.tsx`, the old Form Groups matcher, limited to people without a group or in this cohort).
   `/admin/slots` and `/admin/form-groups` redirect there. Facilitators (one-click Approve, add directly);
-  sessions (+ attendance, facilitator shown). Status changes report failures (e.g. expired admin session)
+  sessions (`?group=` picks a group: its details, a form for that group with "Plan N sessions" from
+  the group's dates and time, and only its sessions; facilitators can only plan for their own groups). Status changes report failures (e.g. expired admin session)
   instead of a false "Saved".
 - **Emails** (`src/lib/email.ts`; always `escapeHtml()` user text): application received (+ notice
   to `ADMIN_EMAIL`), acceptance, rejection (from the owner's "process & templates" docx), magic

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: Context) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!canAccessGroup(me, groupId)) {
+  if (!(await canAccessGroup(me, groupId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

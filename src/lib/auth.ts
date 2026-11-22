@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { createHash, randomBytes } from "crypto";
-import { and, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt, or } from "drizzle-orm";
 import {
   db,
+  groups,
   httpSessions,
   loginTokens,
   participants,
@@ -111,14 +112,43 @@ export const getCurrentParticipant = cache(
 );
 
 /**
- * Group-level access: participants and facilitators only see the group they
- * are assigned to (participants.groupId); the "admin" role sees every group.
+ * The groups someone belongs to: their own group (participants.groupId) and, for
+ * facilitators, every active group they lead (groups.facilitator_id), so one facilitator can
+ * run several groups. Primary group (participants.groupId) first.
  */
-export function canAccessGroup(
-  me: Pick<CurrentParticipant, "role" | "groupId">,
+export async function myGroups(
+  me: Pick<CurrentParticipant, "id" | "role" | "groupId">
+): Promise<{ id: string; name: string; cohort: string | null }[]> {
+  await ensureMigrated();
+  const isFacilitator = me.role === "facilitator" || me.role === "admin";
+  if (!me.groupId && !isFacilitator) return [];
+  const conds = [];
+  if (me.groupId) conds.push(eq(groups.id, me.groupId));
+  if (isFacilitator) conds.push(and(eq(groups.facilitatorId, me.id), eq(groups.active, true)));
+  const rows = await db
+    .select({ id: groups.id, name: groups.name, cohort: groups.cohort })
+    .from(groups)
+    .where(conds.length === 1 ? conds[0] : or(...conds))
+    .orderBy(asc(groups.name));
+  return rows.sort((a, b) => Number(b.id === me.groupId) - Number(a.id === me.groupId));
+}
+
+/**
+ * Group-level access: participants see only their own group (participants.groupId);
+ * facilitators also every group they lead (groups.facilitator_id); role "admin" sees all.
+ */
+export async function canAccessGroup(
+  me: Pick<CurrentParticipant, "id" | "role" | "groupId">,
   groupId: string
-): boolean {
-  return me.role === "admin" || me.groupId === groupId;
+): Promise<boolean> {
+  if (me.role === "admin" || me.groupId === groupId) return true;
+  if (me.role !== "facilitator") return false;
+  const [g] = await db
+    .select({ id: groups.id })
+    .from(groups)
+    .where(and(eq(groups.id, groupId), eq(groups.facilitatorId, me.id)))
+    .limit(1);
+  return !!g;
 }
 
 /** Set the session cookie after a successful magic-link sign-in. */

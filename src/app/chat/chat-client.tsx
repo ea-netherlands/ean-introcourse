@@ -15,6 +15,7 @@ interface Props {
   initialPosts: Post[];
   channel: "general" | "group";
   groupId: string | null;
+  groupName?: string | null;
   myId: string;
   myName: string;
 }
@@ -28,7 +29,7 @@ function fmt(iso: string) {
   return d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function ChatClient({ initialPosts, channel, groupId, myId, myName }: Props) {
+export default function ChatClient({ initialPosts, channel, groupId, groupName, myId, myName }: Props) {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
@@ -76,7 +77,7 @@ export default function ChatClient({ initialPosts, channel, groupId, myId, myNam
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
+    <div className="chat-area flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden transition-opacity" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {posts.length === 0 && (
@@ -124,7 +125,7 @@ export default function ChatClient({ initialPosts, channel, groupId, myId, myNam
           type="text"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder={`Message ${channel === "general" ? "everyone" : "your group"}…`}
+          placeholder={`Message ${channel === "general" ? "everyone" : groupName ?? "your group"}…`}
           className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
           style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
         />

@@ -56,10 +56,9 @@ export async function PATCH(req: NextRequest, { params }: Context) {
 
   await db.update(groups).set(update).where(eq(groups.id, id));
 
-  // The facilitator chosen for a slot should also be in that group (participants.groupId),
-  // otherwise they can't open its chat, overview or discussion. A facilitator has one
-  // group at a time, so someone already leading another group is left as they are.
-  let facilitatorNote: string | undefined;
+  // The facilitator chosen for a group leads it (groups.facilitator_id gives access, so one
+  // facilitator can lead several groups). If they have no group of their own yet, this one
+  // also becomes their main group (participants.groupId), used for their menu links.
   if (typeof update.facilitatorId === "string") {
     const [fac] = await db
       .select({ id: participants.id, groupId: participants.groupId })
@@ -68,11 +67,8 @@ export async function PATCH(req: NextRequest, { params }: Context) {
       .limit(1);
     if (fac && !fac.groupId) {
       await db.update(participants).set({ groupId: id }).where(eq(participants.id, fac.id));
-    } else if (fac && fac.groupId !== id) {
-      facilitatorNote = "This facilitator is still assigned to another group; move them under Groups → Assign people if they should lead this one.";
     }
   }
-  if (facilitatorNote) return NextResponse.json({ ok: true, note: facilitatorNote });
   return NextResponse.json({ ok: true });
 }
 

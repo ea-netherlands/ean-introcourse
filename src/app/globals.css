@@ -469,3 +469,9 @@ mark.marker {
   text-decoration-color: color-mix(in srgb, var(--prose-link) 60%, transparent);
 }
 .prose-content img { border-radius: 12px; margin: 1.7em auto; max-width: 100%; }
+
+/* /chat: dim the messages while another channel loads (set by channel-list.tsx). */
+body[data-chat-pending="1"] .chat-area {
+  opacity: 0.45;
+  pointer-events: none;
+}

@@ -8,5 +8,7 @@ export const NO_COHORT = "_none";
 /** Cohort label stored on a group → the key the page uses ("" = no cohort). */
 export function cohortKey(cohort: string | null | undefined): string {
   const c = (cohort ?? "").trim();
-  return c === NO_COHORT ? "" : c;
+  // "_none" and "function(){throw Error(…NO_COHORT…)}" were saved as cohort names by an early
+  // version of the Groups page; both mean "no cohort" (migration 0013 also clears them).
+  return c === NO_COHORT || c.startsWith("function(") ? "" : c;
 }

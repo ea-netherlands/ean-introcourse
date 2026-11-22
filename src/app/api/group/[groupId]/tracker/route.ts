@@ -16,7 +16,7 @@ interface Context { params: Promise<{ groupId: string }> }
 
 async function editor(req: NextRequest, groupId: string): Promise<string | null> {
   const me = await getCurrentParticipant().catch(() => null);
-  if (me && me.status === "active" && (me.role === "admin" || (me.role === "facilitator" && canAccessGroup(me, groupId)))) {
+  if (me && me.status === "active" && (me.role === "admin" || (me.role === "facilitator" && (await canAccessGroup(me, groupId))))) {
     return me.id;
   }
   if (await verifyAdminSession(req.cookies.get(ADMIN_COOKIE)?.value, process.env.ADMIN_PASSWORD)) return "admin";

@@ -3,21 +3,38 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-interface Group { id: string; name: string }
+interface Group { id: string; name: string; timing?: string | null; dates?: string[]; facilitatorId?: string | null }
 interface Facilitator { id: string; name: string }
+
+/** "monday_1930" → "19:30" */
+function timeOf(timing?: string | null) {
+  const m = timing?.match(/(\d{2})(\d{2})$/);
+  return m ? `${m[1]}:${m[2]}` : null;
+}
 
 export function NewSessionForm({
   groups,
   facilitators,
   googleConfigured,
+  fixedGroupId = null,
+  existingDates = [],
 }: {
   groups: Group[];
   facilitators: Facilitator[];
   googleConfigured: boolean;
+  /** Set when the page shows one group: the form is for that group only. */
+  fixedGroupId?: string | null;
+  /** ISO times of this group's existing sessions (to skip dates that already have one). */
+  existingDates?: string[];
 }) {
+  const initialGroup = groups.find((g) => g.id === fixedGroupId) ?? null;
   const [title, setTitle] = useState("EA intro course - online meeting");
-  const [groupId, setGroupId] = useState("");
-  const [facilitatorId, setFacilitatorId] = useState("");
+  const [groupId, setGroupId] = useState(fixedGroupId ?? "");
+  const [facilitatorId, setFacilitatorId] = useState(initialGroup?.facilitatorId ?? "");
+  const group = groups.find((g) => g.id === groupId) ?? null;
+  const groupTime = timeOf(group?.timing);
+  const takenDays = new Set(existingDates.map((d) => new Date(d).toLocaleDateString("sv-SE")));
+  const plannable = (group?.dates ?? []).filter((d) => !takenDays.has(d));
   const [scheduledAt, setScheduledAt] = useState("");
   const [createMeet, setCreateMeet] = useState(googleConfigured); // auto-create Meet by default
   const [meetLink, setMeetLink] = useState("");
@@ -29,9 +46,6 @@ export function NewSessionForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    setError("");
-
     // Build array of dates to create
     const baseDt = new Date(scheduledAt);
     const dates: string[] = [];
@@ -39,11 +53,25 @@ export function NewSessionForm({
       const dt = new Date(baseDt.getTime() + i * 7 * 24 * 60 * 60 * 1000);
       dates.push(dt.toISOString());
     }
+    await create(dates, (i) => (repeatWeeks > 1 ? `${title.trim()} (${i + 1}/${repeatWeeks})` : title.trim()));
+  }
 
+  /** One session per remaining date of the group, at the group's time. */
+  async function planFromGroup() {
+    if (!group || !groupTime || !plannable.length) return;
+    const all = group.dates ?? [];
+    const dates = plannable.map((d) => new Date(`${d}T${groupTime}`).toISOString());
+    await create(dates, (i) => `${title.trim() || "Session"} (week ${all.indexOf(plannable[i]) + 1})`);
+  }
+
+  async function create(dates: string[], titleFor: (i: number) => string) {
+    if (!groupId) { setError("Choose a group first."); return; }
+    setSaving(true);
+    setError("");
     try {
       let lastId = "";
       for (let i = 0; i < dates.length; i++) {
-        const sessionTitle = repeatWeeks > 1 ? `${title.trim()} (${i + 1}/${repeatWeeks})` : title.trim();
+        const sessionTitle = titleFor(i);
         const res = await fetch("/api/admin/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -64,8 +92,9 @@ export function NewSessionForm({
         const { id } = await res.json();
         if (i === 0) lastId = id;
       }
-      router.push(`/admin/sessions/${lastId}`);
-      router.refresh();
+      if (fixedGroupId) router.refresh();
+      else router.push(`/admin/sessions/${lastId}`);
+      setSaving(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create session.");
       setSaving(false);
@@ -74,7 +103,44 @@ export function NewSessionForm({
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      {!fixedGroupId && (
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Group *</label>
+          <select
+            required
+            value={groupId}
+            onChange={(e) => {
+              setGroupId(e.target.value);
+              const g = groups.find((x) => x.id === e.target.value);
+              if (g?.facilitatorId) setFacilitatorId(g.facilitatorId);
+            }}
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+          >
+            <option value="">Choose the group these sessions are for…</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {group && groupTime && (group.dates?.length ?? 0) > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2.5 text-sm">
+          <span className="text-slate-700">
+            {plannable.length
+              ? <>Quickest: plan <strong>{plannable.length}</strong> session{plannable.length === 1 ? "" : "s"} on this group&apos;s dates at {groupTime}, with the link and agenda below.</>
+              : <>Every date of this group already has a session.</>}
+          </span>
+          {plannable.length > 0 && (
+            <button type="button" onClick={planFromGroup} disabled={saving}
+              className="rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-40">
+              {saving ? "Planning…" : `Plan ${plannable.length} session${plannable.length === 1 ? "" : "s"}`}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Session title *</label>
           <input
@@ -94,19 +160,6 @@ export function NewSessionForm({
             onChange={(e) => setScheduledAt(e.target.value)}
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Group</label>
-          <select
-            value={groupId}
-            onChange={(e) => setGroupId(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-          >
-            <option value="">— All groups / no group —</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
-          </select>
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Facilitator</label>
@@ -188,7 +241,7 @@ export function NewSessionForm({
           </div>
           {repeatWeeks > 1 && (
             <p className="text-xs text-slate-400 mt-1">
-              Will create {repeatWeeks} sessions every Tuesday from the selected date, titled "{title || "Session"} (1/{repeatWeeks})", "(2/{repeatWeeks})", …
+              Will create {repeatWeeks} sessions, one a week from the selected date, titled "{title || "Session"} (1/{repeatWeeks})", "(2/{repeatWeeks})", …
             </p>
           )}
         </div>

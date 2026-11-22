@@ -20,7 +20,10 @@ export function FacilitatorSessionForm({
   googleConfigured?: boolean;
 }) {
   const [title, setTitle] = useState("EA intro course - online meeting");
-  const [groupId, setGroupId] = useState(defaultGroupId ?? "");
+  // A session always belongs to a group (facilitators can lead several).
+  const [groupId, setGroupId] = useState(
+    defaultGroupId && groups.some((g) => g.id === defaultGroupId) ? defaultGroupId : groups[0]?.id ?? ""
+  );
   const [facilitatorId, setFacilitatorId] = useState(defaultFacilitatorId ?? "");
   const [scheduledAt, setScheduledAt] = useState("");
   const [createMeet, setCreateMeet] = useState(googleConfigured);
@@ -158,14 +161,15 @@ export function FacilitatorSessionForm({
         </div>
         {groups.length > 1 && (
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Group</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Group *</label>
             <select
+              required
               value={groupId}
               onChange={(e) => setGroupId(e.target.value)}
               className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
               style={{ background: "var(--bg-hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
             >
-              <option value="">— No group —</option>
+              <option value="" disabled>Choose a group…</option>
               {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           </div>

@@ -8,7 +8,7 @@
 
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { getCurrentParticipant, canAccessGroup } from "@/lib/auth";
+import { getCurrentParticipant, canAccessGroup, myGroups } from "@/lib/auth";
 import { SiteHeader } from "@/components/site-header";
 import {
   db, ensureMigrated,
@@ -45,7 +45,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
   const me = await getCurrentParticipant().catch(() => null);
   if (!me) redirect(`/auth/login?next=/group/${groupId}/overview`);
   if (me.role !== "facilitator" && me.role !== "admin") redirect("/materials");
-  if (!canAccessGroup(me, groupId)) redirect("/materials");
+  if (!(await canAccessGroup(me, groupId))) redirect("/materials");
 
   // Fetch group
   const [group] = await db.select().from(groups).where(eq(groups.id, groupId));
@@ -200,6 +200,8 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
   // Latest lesson comments in this group's cohort (same key as src/lib/comments.ts).
   const cohortKey = group.cohort?.trim() || `group:${group.id}`;
   const [tracker] = await getGroupTrackers([groupId]);
+  // Facilitators can lead several groups: offer a switch between them.
+  const groupsOfMine = me.role === "facilitator" ? await myGroups(me) : [];
   const recentComments = (await recentCohortComments([cohortKey], 15)).map((c) => {
     const week = getWeekByLessonId(c.lessonId);
     return { ...c, lessonTitle: getLessonById(c.lessonId)?.title ?? "Lesson", href: week ? `/materials/${week.slug}/${c.lessonId}#discussion-title` : null };
@@ -211,6 +213,21 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
 
       <div className="page-column">
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+        {groupsOfMine.length > 1 && (
+          <nav aria-label="Your groups" className="flex flex-wrap gap-2">
+            {groupsOfMine.map((g) => (
+              <Link
+                key={g.id}
+                href={`/group/${g.id}/overview`}
+                aria-current={g.id === groupId ? "page" : undefined}
+                className={`rounded-full px-3 py-1.5 text-sm transition-colors ${g.id === groupId ? "bg-teal-700 font-medium text-white" : "border border-slate-200 bg-white text-slate-600 hover:border-teal-300"}`}
+              >
+                {g.name}
+              </Link>
+            ))}
+          </nav>
+        )}
+
         {/* Title */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>

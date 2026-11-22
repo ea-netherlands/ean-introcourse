@@ -15,7 +15,7 @@ import {
 import { newId } from "@/lib/ids";
 import { createMeetEvent } from "@/lib/google-calendar";
 import { ADMIN_COOKIE, verifyAdminSession } from "@/lib/admin-session";
-import { getCurrentParticipant } from "@/lib/auth";
+import { canAccessGroup, getCurrentParticipant } from "@/lib/auth";
 
 /** Admin session check, the same one src/middleware.ts makes. */
 function isAdminRequest(req: NextRequest): Promise<boolean> {
@@ -73,6 +73,10 @@ export async function POST(req: NextRequest) {
 
   if (!title?.trim() || !scheduledAt) {
     return NextResponse.json({ error: "title and scheduledAt are required" }, { status: 400 });
+  }
+  // Facilitators only plan sessions for groups they lead.
+  if (!admin && (!groupId || !(await canAccessGroup(me!, groupId)))) {
+    return NextResponse.json({ error: "You can only plan sessions for your own groups." }, { status: 403 });
   }
 
   // Auto-create a Google Meet + Calendar event if requested

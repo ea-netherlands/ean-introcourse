@@ -13,7 +13,7 @@ import {
   groups,
   participants,
 } from "@/db";
-import { getCurrentParticipant } from "@/lib/auth";
+import { getCurrentParticipant, myGroups } from "@/lib/auth";
 import { SiteHeader } from "@/components/site-header";
 import { FacilitatorSessionForm } from "./facilitator-session-form";
 import { googleCalendarConfigured } from "@/lib/google-calendar";
@@ -28,8 +28,9 @@ export default async function SessionsPage() {
 
   const isAdmin = me.role === "admin";
 
-  // Get all groups (admin) or just the facilitator's group(s)
+  // Get all groups (admin) or the groups this facilitator leads (can be several)
   const allGroups = await db.select({ id: groups.id, name: groups.name }).from(groups);
+  const ownGroupIds = new Set((await myGroups(me)).map((g) => g.id));
 
   // Get all facilitators for the form
   const facilitators = await db
@@ -55,7 +56,7 @@ export default async function SessionsPage() {
   // Filter to facilitator's group unless admin
   const relevantSessions = isAdmin
     ? sessionRows
-    : sessionRows.filter((s) => s.groupId === me.groupId || s.facilitatorId === me.id);
+    : sessionRows.filter((s) => (s.groupId && ownGroupIds.has(s.groupId)) || s.facilitatorId === me.id);
 
   const now = new Date();
   const upcoming = relevantSessions.filter((s) => s.scheduledAt >= now);
@@ -93,7 +94,7 @@ export default async function SessionsPage() {
             Schedule a new session
           </h2>
           <FacilitatorSessionForm
-            groups={isAdmin ? allGroups : allGroups.filter((g) => g.id === me.groupId)}
+            groups={isAdmin ? allGroups : allGroups.filter((g) => ownGroupIds.has(g.id))}
             facilitators={facilitators}
             defaultGroupId={me.groupId ?? ""}
             defaultFacilitatorId={me.id}

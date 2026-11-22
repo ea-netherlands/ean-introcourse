@@ -48,7 +48,7 @@ export default async function StartHerePage() {
   const me = await getCurrentParticipant().catch(() => null);
   const firstLesson = weeks[0]?.lessons[0];
   const firstLessonHref = firstLesson ? `/materials/${weeks[0].slug}/${firstLesson.id}` : "/materials/week-1";
-  const chatHref = me?.groupId ? `/group/${me.groupId}` : "/chat";
+  const chatHref = me?.groupId ? "/chat?channel=group" : "/chat";
 
   return (
     <main className="flex-1 min-w-0">

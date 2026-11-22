@@ -22,7 +22,8 @@ function navItems(user: HeaderUser | null) {
     { href: "/materials", label: "Materials" },
     { href: "/account", label: "My account" },
   ];
-  if (user.groupId) items.push({ href: `/group/${user.groupId}`, label: "Group chat" });
+  // One chat for everyone (/chat), opened on your group's channel when you have one.
+  if (user.groupId) items.push({ href: "/chat?channel=group", label: "Group chat" });
   else items.push({ href: "/chat", label: "Chat" });
   if (user.role === "facilitator" || user.role === "admin") {
     items.push({ href: "/sessions", label: "Sessions" });
@@ -33,8 +34,9 @@ function navItems(user: HeaderUser | null) {
 }
 
 function isActive(pathname: string, href: string) {
+  href = href.split("?")[0];
   if (href === "/materials") return pathname.startsWith("/materials");
-  if (href.endsWith("/overview")) return pathname === href;
+  if (href.endsWith("/overview")) return pathname.endsWith("/overview");
   if (href.startsWith("/group/")) return pathname === href;
   return pathname.startsWith(href);
 }

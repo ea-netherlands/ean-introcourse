@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentParticipant } from "@/lib/auth";
 import { PublicShell } from "@/components/public-shell";
+import { FOLLOW_UP_FORM_URL } from "@/components/follow-up-card";
 
 export default async function GraduatedPage() {
   const participant = await getCurrentParticipant().catch(() => null);
@@ -27,6 +28,18 @@ export default async function GraduatedPage() {
           You have completed the EA Netherlands Intro Fellowship.
           Your group has graduated — we hope the programme was valuable and that
           you continue exploring effective ways to do good.
+        </p>
+
+        <a
+          href={FOLLOW_UP_FORM_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="btn-pill btn-pill-primary mb-2 inline-flex w-full items-center justify-center px-5 py-3 text-sm font-semibold"
+        >
+          Fill in the follow-up form ↗
+        </a>
+        <p className="mb-6 text-xs" style={{ color: "var(--text-muted)" }}>
+          Tell us how it went and whether you would like to continue with the EA Netherlands Fellowship.
         </p>
 
         <div

@@ -8,10 +8,33 @@ type Tab = "magic" | "password";
 
 const CONTACT_EMAIL = "programmes@effectiefaltruisme.nl";
 
+/**
+ * Hands the email someone typed here to the application form, so they don't have to type it
+ * again. sessionStorage (not the URL) keeps the address out of logs and browser history.
+ */
+const APPLY_EMAIL_KEY = "ean_apply_email";
+function rememberEmailForApply(email: string) {
+  try {
+    if (email.trim()) sessionStorage.setItem(APPLY_EMAIL_KEY, email.trim().toLowerCase());
+  } catch {}
+}
+
+function ApplyButton({ email, label = "Go to the application form" }: { email: string; label?: string }) {
+  return (
+    <Link
+      href="/apply"
+      onClick={() => rememberEmailForApply(email)}
+      className="btn-pill btn-pill-secondary mt-2.5 inline-flex w-full items-center justify-center px-4 py-2 text-sm font-semibold"
+    >
+      {label} →
+    </Link>
+  );
+}
+
 /** Why no sign-in email was sent (from /api/auth/send-link or /auth/verify). */
 type Notice = "unknown" | "pending" | "rate_limited" | "invalid_link" | null;
 
-function NoticeBox({ notice }: { notice: Exclude<Notice, null> }) {
+function NoticeBox({ notice, email }: { notice: Exclude<Notice, null>; email: string }) {
   const mail = (
     <a href={`mailto:${CONTACT_EMAIL}`} className="underline" style={{ color: "var(--color-ea-teal)" }}>
       {CONTACT_EMAIL}
@@ -20,12 +43,10 @@ function NoticeBox({ notice }: { notice: Exclude<Notice, null> }) {
   const body = {
     unknown: (
       <>
-        Your email address is not yet known to us. Please use the same email address as in your
-        application, or{" "}
-        <Link href="/apply" className="underline font-medium" style={{ color: "var(--color-ea-teal)" }}>
-          apply here
-        </Link>
-        .
+        <strong>We don&apos;t have an account for this email address yet.</strong> If you already
+        applied, use the same email address as in your application. New here? Fill in the
+        application form to join the Intro Course.
+        <ApplyButton email={email} />
       </>
     ),
     pending: (
@@ -220,7 +241,7 @@ function LoginPageContent() {
                     />
                   </div>
 
-                  {notice && <NoticeBox notice={notice} />}
+                  {notice && <NoticeBox notice={notice} email={email} />}
 
                   {status === "error" && (
                     <p className="text-sm" style={{ color: "#ef4444" }}>{errorMsg}</p>
@@ -280,7 +301,18 @@ function LoginPageContent() {
               ))}
 
               {pwStatus === "error" && (
-                <p className="text-sm" style={{ color: "#ef4444" }}>{pwError}</p>
+                <div className="space-y-1">
+                  <p className="text-sm" style={{ color: "#ef4444" }}>{pwError}</p>
+                  {pwError.startsWith("Invalid") && (
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      Don&apos;t have an account yet?{" "}
+                      <Link href="/apply" onClick={() => rememberEmailForApply(pwEmail)} className="font-medium text-ea-teal underline">
+                        Apply for the Intro Course
+                      </Link>
+                      . Already applied but never set a password? Use the &ldquo;Magic link&rdquo; tab.
+                    </p>
+                  )}
+                </div>
               )}
 
               <button
@@ -301,12 +333,13 @@ function LoginPageContent() {
           </div>
         )}
 
-        <p className="mt-6 text-center text-sm" style={{ color: "var(--text-secondary)" }}>
-          No account yet?{" "}
-          <Link href="/apply" className="font-medium text-ea-teal underline underline-offset-2 hover:opacity-80">
-            Apply here
-          </Link>
-        </p>
+        <div className="card-ean mt-6 px-5 py-4 text-center">
+          <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>No account yet?</p>
+          <p className="mt-0.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+            You get an account once your application for the Intro Course is accepted.
+          </p>
+          <ApplyButton email={tab === "magic" ? email : pwEmail} label="Apply for the Intro Course" />
+        </div>
 
         <p className="mt-2 text-center text-sm" style={{ color: "var(--text-muted)" }}>
           Questions?{" "}

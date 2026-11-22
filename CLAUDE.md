@@ -139,6 +139,11 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   field (stored as "Other: …"); students answer field of study (`applications.study_field`)
   instead of occupation/work area. Accepted applicants get a 7-day `/onboard?token=` link to
   confirm availability and set a password; finished participants are sent to `/graduated`.
+- **Follow-up form:** finished participants are invited to the EAN Fellowship Typeform
+  (`FOLLOW_UP_FORM_URL` in `src/components/follow-up-card.tsx`) on `/graduated`, on `/account` (status
+  completed or all lessons done) and under the last lesson.
+- **No account yet:** the login page sends unknown addresses to `/apply` with a clear button; the typed
+  email is handed over in `sessionStorage` (`ean_apply_email`), never in the URL.
 - **Participant:** `/materials/[slug]/[lessonId]` with progress bar, quizzes (locked after submit,
   score + explanations) and exercises; answers saved via `/api/exercises/submit` →
   `lesson_responses`. `/account` (profile, upcoming sessions + calendar links), `/chat`
@@ -165,7 +170,7 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   optional auto-created Google Meet); `/group/[groupId]/overview` student progress + answers.
 - **Admin:** `/admin` dashboard, applications (bulk accept/reject, delete), participants
   (table with bulk select/delete, prev/next on detail, CSV export), groups (timing,
-  activate/deactivate — deactivating marks members completed — delete when empty), full-page
+  activate/deactivate — deactivating marks its participants completed, not its facilitator — delete when empty), full-page
   form-groups matcher, facilitators (approve, add directly), sessions (+ attendance, facilitator shown).
 - **Emails** (`src/lib/email.ts`; always `escapeHtml()` user text): application received (+ notice
   to `ADMIN_EMAIL`), acceptance, rejection (from the owner's "process & templates" docx), magic

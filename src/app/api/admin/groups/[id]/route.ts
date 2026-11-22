@@ -4,7 +4,7 @@
  * DELETE /api/admin/groups/[id] — permanently remove an empty group.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { eq, count } from "drizzle-orm";
+import { and, eq, count } from "drizzle-orm";
 import { db, groups, participants, fellowshipSessions, ensureMigrated } from "@/db";
 
 interface Context { params: Promise<{ id: string }> }
@@ -34,12 +34,13 @@ export async function PATCH(req: NextRequest, { params }: Context) {
   if ("bookable" in body) update.bookable = Boolean(body.bookable);
   if ("active" in body) {
     update.active = Boolean(body.active);
-    // Deactivating a group graduates all its participants
+    // Deactivating a group graduates its participants. Facilitators (and admins) keep their
+    // status, otherwise they'd lose the facilitator guide and can't lead a next group.
     if (body.active === false) {
       await db
         .update(participants)
         .set({ status: "completed" })
-        .where(eq(participants.groupId, id));
+        .where(and(eq(participants.groupId, id), eq(participants.role, "participant")));
     }
   }
 

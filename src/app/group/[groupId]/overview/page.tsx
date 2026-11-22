@@ -318,7 +318,7 @@ export default async function FacilitatorGroupOverviewPage({ params }: Props) {
               </p>
               <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
                 Coordinators assign students on the{" "}
-                <a href="/admin/form-groups" className="text-ea-teal underline">Form Groups</a> page.
+                <a href="/admin/groups?tab=assign" className="text-ea-teal underline">Groups → Assign people</a> page.
               </p>
             </div>
           ) : (

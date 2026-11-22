@@ -16,11 +16,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <nav className="order-last md:order-none -mx-2 md:mx-0 flex w-[calc(100%+1rem)] md:w-auto items-center gap-1 overflow-x-auto whitespace-nowrap md:flex-wrap md:whitespace-normal">
             {[
-              { href: "/admin/participants", label: "Participants" },
-              { href: "/admin/groups", label: "Groups" },
-              { href: "/admin/slots", label: "Slots" },
               { href: "/admin/applications", label: "Applications" },
-              { href: "/admin/form-groups", label: "Form Groups" },
+              { href: "/admin/groups", label: "Groups" },
+              { href: "/admin/participants", label: "Participants" },
               { href: "/admin/facilitators", label: "Facilitators" },
               { href: "/admin/sessions", label: "Sessions" },
             ].map(({ href, label }) => (

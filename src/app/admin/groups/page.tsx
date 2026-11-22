@@ -115,7 +115,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
         <Link href={qs("assign")} className={tabClass("assign")}>2. Assign people</Link>
       </nav>
 
-      {tab === "setup" ? <GroupSetup key={cohort} cohort={cohort} /> : assign}
+      {tab === "setup" ? <GroupSetup key={cohort} cohort={cohort} cohorts={cohorts} /> : assign}
     </div>
   );
 }

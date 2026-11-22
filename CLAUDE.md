@@ -120,7 +120,10 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   `rate_limited`, and the login page explains each one ("your email is not yet known to us… apply
   here"). Revealing that an address is unknown is a deliberate choice by the programme team.
 - Accounts with status `pending` cannot sign in by either method (no link is sent, and
-  `/auth/verify` re-checks). Magic links are rate-limited to 3 per address per 15 min (counted in
+  `/auth/verify` re-checks), and `getCurrentParticipant()` returns null for them, so an existing session
+  stops working too; setting someone back to pending deletes their sessions. After signing in people return
+  to `?next=` (only own paths, `safeNextPath()` in `src/lib/url.ts`). Admin "Send magic link" on a pending
+  participant sends a new registration link instead. A replaced facilitator loses that group. Magic links are rate-limited to 3 per address per 15 min (counted in
   `email_log`).
 - Forgot password: `/auth/forgot-password` → `/api/auth/forgot-password` emails a one-time link (a
   `login_tokens` token, 30 min, max 3 per 15 min, kind `password_reset`) to `/auth/reset-password`,

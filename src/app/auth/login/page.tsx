@@ -77,6 +77,13 @@ function NoticeBox({ notice, email }: { notice: Exclude<Notice, null>; email: st
   );
 }
 
+/** ?next= from protected pages (only paths on this site; checked again on the server). */
+function nextPath(): string | null {
+  if (typeof window === "undefined") return null;
+  const n = new URLSearchParams(window.location.search).get("next");
+  return n && n.startsWith("/") && !n.startsWith("//") && !n.startsWith("/\\") && !n.startsWith("/auth/") ? n : null;
+}
+
 function LoginPageContent() {
   const [tab, setTab] = useState<Tab>("magic");
 
@@ -123,7 +130,7 @@ function LoginPageContent() {
       const res = await fetch("/api/auth/send-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, next: nextPath() }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -159,7 +166,7 @@ function LoginPageContent() {
       } else {
         rememberLogin(pwEmail, "password");
         // Cookie is set on this response; navigate to the redirect target
-        window.location.href = data.redirect ?? "/";
+        window.location.href = nextPath() ?? data.redirect ?? "/";
       }
     } catch {
       setPwError("Network error. Please try again.");

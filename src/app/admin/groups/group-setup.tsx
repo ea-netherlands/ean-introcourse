@@ -308,6 +308,9 @@ function GroupCard({
           </button>
         )}
         <div className="flex-1" />
+        {form.bookable && shownDates[0] && shownDates[0] < new Date().toISOString().slice(0, 10) && (
+          <span className="text-xs text-amber-700">The first session has passed: this group no longer shows on the apply form.</span>
+        )}
         {form.bookable && missing.length > 0 && (
           <span className="text-xs text-amber-700">Applicants will see this group without: {missing.join(", ")}.</span>
         )}

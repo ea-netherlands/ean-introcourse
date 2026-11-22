@@ -8,6 +8,8 @@
  */
 
 import { NextResponse } from "next/server";
+import { and, count, eq, gt } from "drizzle-orm";
+import { db, emailLog, ensureMigrated } from "@/db";
 import { sendEmail } from "@/lib/email";
 import { appUrl } from "@/lib/url";
 
@@ -15,6 +17,15 @@ const ADMIN_EMAIL = "programmes@effectiefaltruisme.nl";
 
 export async function POST() {
   const siteUrl = appUrl("/admin/login");
+
+  // Anyone can press this button: at most 3 emails per hour, so it can't flood the inbox.
+  await ensureMigrated();
+  const since = new Date(Date.now() - 60 * 60 * 1000);
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(emailLog)
+    .where(and(eq(emailLog.kind, "admin_forgot_password"), gt(emailLog.sentAt, since)));
+  if (n >= 3) return NextResponse.json({ ok: true });
 
   await sendEmail({
     to: ADMIN_EMAIL,

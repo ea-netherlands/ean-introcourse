@@ -15,6 +15,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
 
+  if (typeof email !== "string" || typeof password !== "string") {
+    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+  }
   const [participant] = await db
     .select()
     .from(participants)

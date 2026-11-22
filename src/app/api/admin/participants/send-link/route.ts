@@ -1,13 +1,18 @@
 /**
  * POST /api/admin/participants/send-link
  *
- * Generates a magic-link token for a participant and emails it to them.
- * Called from the admin participant detail page.
+ * Emails a participant a way in, from the admin participant detail page:
+ * - active/completed: a magic sign-in link (30 min);
+ * - pending participant (accepted but never registered, e.g. the 7-day link expired):
+ *   a new registration link (/onboard, 7 days) instead, because pending accounts can't sign in;
+ * - pending facilitator: refused (approve them first).
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createHash, randomBytes } from "crypto";
 import { eq } from "drizzle-orm";
-import { db, participants, ensureMigrated } from "@/db";
+import { db, participants, onboardingTokens, ensureMigrated } from "@/db";
+import { newId } from "@/lib/ids";
 import { createLoginToken } from "@/lib/auth";
 import { sendEmail, btn, escapeHtml } from "@/lib/email";
 import { appUrl } from "@/lib/url";
@@ -17,7 +22,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json() as { participantId?: string };
     const { participantId } = body;
 
-    if (!participantId) {
+    if (typeof participantId !== "string" || !participantId) {
       return NextResponse.json({ error: "participantId required." }, { status: 400 });
     }
 
@@ -31,6 +36,34 @@ export async function POST(req: NextRequest) {
 
     if (!participant) {
       return NextResponse.json({ error: "Participant not found." }, { status: 404 });
+    }
+
+    if (participant.status === "pending") {
+      if (participant.role !== "participant") {
+        return NextResponse.json({ error: "This facilitator is still pending: approve them first." }, { status: 409 });
+      }
+      const raw = randomBytes(32).toString("base64url");
+      await db.insert(onboardingTokens).values({
+        id: newId("ot"),
+        participantId: participant.id,
+        tokenHash: createHash("sha256").update(raw).digest("hex"),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+      const onboardUrl = appUrl(`/onboard?token=${raw}`);
+      await sendEmail({
+        to: participant.email,
+        subject: "Complete your registration for the EA Netherlands Intro Course",
+        html: `
+          <p>Hi ${escapeHtml(participant.name)},</p>
+          <p>You were accepted to the EA Netherlands Intro Course, but your registration isn't complete yet.
+             Use the button below to confirm your availability and choose a password. This link is valid for 7 days.</p>
+          ${btn(onboardUrl, "Complete registration →")}
+          <p style="color:#888;font-size:12px;margin-top:16px;">Questions? Reply to this email or write to programmes@effectiefaltruisme.nl.</p>
+        `,
+        kind: "onboarding",
+        replyTo: "programmes@effectiefaltruisme.nl",
+      });
+      return NextResponse.json({ ok: true, sent: "registration" });
     }
 
     const raw = await createLoginToken(participant.id);
@@ -53,7 +86,7 @@ export async function POST(req: NextRequest) {
       kind: "magic_link",
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, sent: "sign-in" });
   } catch (err) {
     console.error("[send-link]", err);
     return NextResponse.json({ error: "Internal error." }, { status: 500 });

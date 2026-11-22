@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, ensureMigrated, fellowshipSessions } from "@/db";
 import { buildIcsContent, SESSION_DURATION_MINUTES } from "@/lib/calendar";
+import { canAccessGroup, getCurrentParticipant } from "@/lib/auth";
 
 interface Context { params: Promise<{ id: string }> }
 
@@ -18,7 +19,9 @@ export async function GET(_req: NextRequest, { params }: Context) {
     .where(eq(fellowshipSessions.id, id))
     .limit(1);
 
-  if (!session) {
+  // Only people in the session's group (it contains the meeting link).
+  const me = await getCurrentParticipant().catch(() => null);
+  if (!session || !me || !(session.groupId ? await canAccessGroup(me, session.groupId) : me.role === "admin")) {
     return new NextResponse("Not found", { status: 404 });
   }
 

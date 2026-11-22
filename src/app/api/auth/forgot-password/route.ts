@@ -19,7 +19,7 @@ const RATE_WINDOW_MINUTES = 15;
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json().catch(() => ({}))) as { email?: string };
-    const email = body.email?.toLowerCase().trim();
+    const email = typeof body.email === "string" ? body.email.toLowerCase().trim() : "";
     if (!email || !email.includes("@")) {
       return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
     }

@@ -15,15 +15,15 @@ import { and, count, eq, gt } from "drizzle-orm";
 import { db, participants, emailLog, ensureMigrated } from "@/db";
 import { createLoginToken } from "@/lib/auth";
 import { sendEmail, btn, escapeHtml } from "@/lib/email";
-import { appUrl } from "@/lib/url";
+import { appUrl, safeNextPath } from "@/lib/url";
 
 const MAX_LINKS = 3;
 const RATE_WINDOW_MINUTES = 15;
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json() as { email?: string };
-    const email = body.email?.toLowerCase().trim();
+    const body = await req.json() as { email?: string; next?: string };
+    const email = typeof body.email === "string" ? body.email.toLowerCase().trim() : "";
 
     if (!email || !email.includes("@")) {
       return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
@@ -61,7 +61,9 @@ export async function POST(req: NextRequest) {
     }
 
     const raw = await createLoginToken(participant.id);
-    const verifyUrl = appUrl(`/auth/verify?token=${raw}`);
+    // Come back to the page they wanted (?next= on the sign-in page), if it is one of ours.
+    const next = safeNextPath(body.next);
+    const verifyUrl = appUrl(`/auth/verify?token=${raw}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
 
     await sendEmail({
       to: participant.email,

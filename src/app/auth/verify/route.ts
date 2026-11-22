@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { consumeLoginToken, createSession } from "@/lib/auth";
-import { appUrl } from "@/lib/url";
+import { appUrl, safeNextPath } from "@/lib/url";
 import { eq } from "drizzle-orm";
 import { db, participants } from "@/db";
 
@@ -45,7 +45,8 @@ export async function GET(req: NextRequest) {
   // Set the cookie directly on the redirect response so Next.js includes it
   // in the same round-trip (setting cookies via cookies() in Route Handlers
   // requires Next.js 15.1+ and can be unreliable with redirect responses).
-  const response = NextResponse.redirect(appUrl("/materials"));
+  const next = safeNextPath(req.nextUrl.searchParams.get("next"));
+  const response = NextResponse.redirect(appUrl(next ?? "/materials"));
   response.cookies.set(SESSION_COOKIE, sessionToken, {
     httpOnly: true,
     sameSite: "lax",

@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentParticipant, canAccessGroup } from "@/lib/auth";
 import { db, ensureMigrated, groupPosts, groupPostReplies } from "@/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 interface Context {
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: Context) {
   const [post] = await db
     .select({ id: groupPosts.id })
     .from(groupPosts)
-    .where(eq(groupPosts.id, postId));
+    .where(and(eq(groupPosts.id, postId), eq(groupPosts.groupId, groupId)));
   if (!post) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }

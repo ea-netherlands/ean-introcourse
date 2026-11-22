@@ -4,7 +4,7 @@
  * DELETE /api/admin/groups/[id] — permanently remove an empty group.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, count } from "drizzle-orm";
+import { and, eq, count, ne } from "drizzle-orm";
 import { cohortKey } from "@/app/admin/groups/cohort";
 import { syncGroupSessions } from "@/lib/session-sync";
 import { db, groups, participants, fellowshipSessions, ensureMigrated } from "@/db";
@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
 
-  const [group] = await db.select({ id: groups.id }).from(groups).where(eq(groups.id, id)).limit(1);
+  const [group] = await db.select({ id: groups.id, facilitatorId: groups.facilitatorId }).from(groups).where(eq(groups.id, id)).limit(1);
   if (!group) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -60,6 +60,15 @@ export async function PATCH(req: NextRequest, { params }: Context) {
   // The facilitator chosen for a group leads it (groups.facilitator_id gives access, so one
   // facilitator can lead several groups). If they have no group of their own yet, this one
   // also becomes their main group (participants.groupId), used for their menu links.
+  // Replaced facilitator: if this was their own group (participants.groupId), take it away
+  // (or move them to another group they still lead), so they no longer have access.
+  if ("facilitatorId" in update && group.facilitatorId && group.facilitatorId !== update.facilitatorId) {
+    const [old] = await db.select({ id: participants.id, groupId: participants.groupId, role: participants.role }).from(participants).where(eq(participants.id, group.facilitatorId)).limit(1);
+    if (old && old.role === "facilitator" && old.groupId === id) {
+      const [other] = await db.select({ id: groups.id }).from(groups).where(and(eq(groups.facilitatorId, old.id), eq(groups.active, true), ne(groups.id, id))).limit(1);
+      await db.update(participants).set({ groupId: other?.id ?? null }).where(eq(participants.id, old.id));
+    }
+  }
   if (typeof update.facilitatorId === "string") {
     const [fac] = await db
       .select({ id: participants.id, groupId: participants.groupId })

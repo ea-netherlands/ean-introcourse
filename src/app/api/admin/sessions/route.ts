@@ -71,8 +71,11 @@ export async function POST(req: NextRequest) {
     ? (body as { facilitatorId?: string }).facilitatorId
     : me!.id;
 
-  if (!title?.trim() || !scheduledAt) {
-    return NextResponse.json({ error: "title and scheduledAt are required" }, { status: 400 });
+  if (typeof title !== "string" || !title.trim() || typeof scheduledAt !== "string" || Number.isNaN(new Date(scheduledAt).getTime())) {
+    return NextResponse.json({ error: "A title and a valid date are required." }, { status: 400 });
+  }
+  if (meetLink != null && (typeof meetLink !== "string" || (meetLink.trim() && !/^https?:\/\//i.test(meetLink.trim())))) {
+    return NextResponse.json({ error: "The link must start with https://" }, { status: 400 });
   }
   // Facilitators only plan sessions for groups they lead.
   if (!admin && (!groupId || !(await canAccessGroup(me!, groupId)))) {

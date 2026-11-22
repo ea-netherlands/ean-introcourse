@@ -5,9 +5,12 @@ import { useState } from "react";
 interface Props {
   participantId: string;
   email: string;
+  /** Pending participants get a new registration link instead of a sign-in link. */
+  pending?: boolean;
 }
 
-export function SendLinkButton({ participantId, email }: Props) {
+export function SendLinkButton({ participantId, email, pending = false }: Props) {
+  const [error, setError] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle"
   );
@@ -20,6 +23,7 @@ export function SendLinkButton({ participantId, email }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ participantId }),
       });
+      if (!res.ok) setError((await res.json().catch(() => ({}))).error ?? (res.status === 401 ? "Admin session expired: reload and sign in again." : "Failed — try again"));
       setStatus(res.ok ? "sent" : "error");
     } catch {
       setStatus("error");
@@ -37,13 +41,15 @@ export function SendLinkButton({ participantId, email }: Props) {
           ? "Sending…"
           : status === "sent"
           ? "Link sent ✓"
+          : pending
+          ? "Send new registration link"
           : "Send magic link"}
       </button>
       {status === "sent" && (
         <span className="text-xs text-slate-400">Sent to {email}</span>
       )}
       {status === "error" && (
-        <span className="text-xs text-red-500">Failed — try again</span>
+        <span className="text-xs text-red-500">{error || "Failed — try again"}</span>
       )}
     </div>
   );

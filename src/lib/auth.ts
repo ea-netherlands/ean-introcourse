@@ -107,7 +107,10 @@ export const getCurrentParticipant = cache(
       .where(eq(participants.id, session.participantId))
       .limit(1);
 
-    return participant ?? null;
+    // Pending accounts (not onboarded / not approved, or set back to pending) have no access,
+    // even with a session that was created earlier.
+    if (!participant || participant.status === "pending") return null;
+    return participant;
   }
 );
 

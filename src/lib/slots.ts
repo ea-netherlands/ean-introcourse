@@ -99,8 +99,16 @@ export async function listSlots(opts: { bookableOnly: boolean; includeClosed?: b
           : eq(groups.active, true)
     )
     .orderBy(groups.createdAt);
-  const counts = await bookedCounts(rows.map((r) => r.id));
-  return rows.map((r) => {
+  // On the apply form, a group whose first session has already passed can't be booked any more.
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" });
+  const visible = opts.bookableOnly
+    ? rows.filter((r) => {
+        const first = effectiveDates(r, r.cohortStart).dates[0];
+        return !first || first >= today;
+      })
+    : rows;
+  const counts = await bookedCounts(visible.map((r) => r.id));
+  return visible.map((r) => {
     const booked = counts.get(r.id) ?? 0;
     const eff = effectiveDates(r, r.cohortStart);
     return {

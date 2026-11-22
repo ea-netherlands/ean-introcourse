@@ -10,7 +10,10 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 
-  const { name, email, password } = body as { name?: string; email?: string; password?: string };
+  const { name, email, password } = body as { name?: unknown; email?: unknown; password?: unknown };
+  if (typeof name !== "string" || typeof email !== "string" || typeof password !== "string") {
+    return NextResponse.json({ error: "Name, email and password are required." }, { status: 400 });
+  }
   if (!name?.trim()) return NextResponse.json({ error: "Name is required." }, { status: 400 });
   if (!email?.trim()) return NextResponse.json({ error: "Email is required." }, { status: 400 });
   if (!password || password.length < 8) return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });

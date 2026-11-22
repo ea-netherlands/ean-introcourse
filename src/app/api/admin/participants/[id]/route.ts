@@ -13,6 +13,7 @@ import {
   groupPosts,
   groupPostReplies,
   fellowshipSessions,
+  httpSessions,
 } from "@/db";
 
 interface Context { params: Promise<{ id: string }> }
@@ -47,6 +48,8 @@ export async function PATCH(req: NextRequest, { params }: Context) {
   }
 
   await db.update(participants).set(update).where(eq(participants.id, id));
+  // Set back to pending: sign them out everywhere.
+  if (update.status === "pending") await db.delete(httpSessions).where(eq(httpSessions.participantId, id));
   // Moved into a group: add them to its upcoming sessions (reminders).
   if (typeof update.groupId === "string") await syncGroupSessions(update.groupId);
   return NextResponse.json({ ok: true });

@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { db, lessonProgress, ensureMigrated } from "@/db";
 import { getCurrentParticipant } from "@/lib/auth";
+import { getLessonById } from "@/lib/lessons";
 import { newId } from "@/lib/ids";
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     };
     const { lessonId, pct, completed } = body;
 
-    if (!lessonId || typeof pct !== "number") {
+    if (typeof lessonId !== "string" || !getLessonById(lessonId) || typeof pct !== "number" || !Number.isFinite(pct)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
@@ -38,13 +39,13 @@ export async function POST(req: NextRequest) {
           id: newId("lp"),
           participantId: participant.id,
           lessonId,
-          progressPct: Math.round(pct),
+          progressPct: Math.max(0, Math.min(100, Math.round(pct))),
           completedAt: completed ? new Date() : null,
         })
         .onConflictDoUpdate({
           target: [lessonProgress.participantId, lessonProgress.lessonId],
           set: {
-            progressPct: Math.round(pct),
+            progressPct: Math.max(0, Math.min(100, Math.round(pct))),
             // Only set completedAt once — never clear it once set
             completedAt: completed
               ? new Date()

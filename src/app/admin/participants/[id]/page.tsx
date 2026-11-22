@@ -203,7 +203,7 @@ export default async function ParticipantDetailPage({ params }: Props) {
 
         {/* Actions */}
         <div className="mt-4 flex items-center justify-between gap-3">
-          <SendLinkButton participantId={participant.id} email={participant.email} />
+          <SendLinkButton participantId={participant.id} email={participant.email} pending={participant.status === "pending" && participant.role === "participant"} />
           <DeleteParticipantButton participantId={participant.id} name={participant.name} />
         </div>
       </div>

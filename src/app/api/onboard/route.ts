@@ -8,8 +8,8 @@ import { GROUP_TIMESLOTS, normalizeAvailability } from "@/lib/availability";
 export async function POST(req: NextRequest) {
   await ensureMigrated();
   const body = await req.json().catch(() => ({}));
-  const raw: string = body.token ?? "";
-  const password: string = body.password ?? "";
+  const raw: string = typeof body.token === "string" ? body.token : "";
+  const password: string = typeof body.password === "string" ? body.password : "";
   const allowed = new Set<string>(GROUP_TIMESLOTS.map((t) => t.value));
   const availability = normalizeAvailability(body.availability).filter((s) => allowed.has(s));
 

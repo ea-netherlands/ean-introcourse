@@ -46,6 +46,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const body = await req.json().catch(() => ({}));
   const content = typeof body.content === "string" ? body.content.trim() : "";
   if (!content) return NextResponse.json({ error: "Content required" }, { status: 400 });
+  if (content.length > 2000) return NextResponse.json({ error: "Too long" }, { status: 400 });
 
   const id = randomBytes(12).toString("hex");
   await db.insert(groupPosts).values({ id, groupId, authorId: me.id, content });

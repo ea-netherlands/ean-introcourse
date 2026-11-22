@@ -18,6 +18,3 @@ export async function POST() {
   res.headers.set("Cache-Control", "no-store");
   return res;
 }
-
-/** A plain link or a refresh on /auth/logout also signs out instead of showing an error. */
-export const GET = POST;

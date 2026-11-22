@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GROUP_TIMESLOTS, formatGroupTiming } from "@/lib/availability";
+import { cohortKey } from "./cohort";
 
 interface Slot {
   id: string;
@@ -135,7 +136,7 @@ function GroupCard({ slot, facilitators, onChanged }: { slot: Slot; facilitators
     <div className="card-ean space-y-4 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-[12rem] flex-1">
-          <span className={label}>Group name</span>
+          <span className={label}>Group name (applicants see it when two open groups share a day &amp; time)</span>
           <input className={`${input} font-medium`} value={form.name} onChange={(e) => set("name", e.target.value)} />
           <p className="mt-1 text-xs text-slate-500">
             {slot.memberCount} in the group · {slot.booked} booked{slot.capacity != null ? ` of ${slot.capacity} places` : ""}
@@ -283,7 +284,7 @@ export function GroupSetup({ cohort }: { cohort: string }) {
     changed();
   }
 
-  const inCohort = (slots ?? []).filter((s) => (s.cohort ?? "") === cohort);
+  const inCohort = (slots ?? []).filter((s) => cohortKey(s.cohort) === cohort);
   const open = inCohort.filter((s) => s.active);
   const closed = inCohort.filter((s) => !s.active);
   const bookable = open.filter((s) => s.bookable);

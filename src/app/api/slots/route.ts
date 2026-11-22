@@ -12,6 +12,8 @@ export async function GET() {
   return NextResponse.json(
     slots.map((s) => ({
       id: s.id,
+      // Shown on the card only when several open groups share a day & time.
+      name: s.name,
       timing: s.timing,
       timingLabel: s.timingLabel,
       dates: s.dates,

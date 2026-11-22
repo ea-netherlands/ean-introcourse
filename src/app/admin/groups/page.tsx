@@ -11,7 +11,8 @@ import { eq } from "drizzle-orm";
 import { db, participants, groups, applications, ensureMigrated } from "@/db";
 import AssignPeople from "./assign-people";
 import { GroupSetup } from "./group-setup";
-import { CohortPicker, NO_COHORT } from "./cohort-picker";
+import { CohortPicker } from "./cohort-picker";
+import { NO_COHORT, cohortKey } from "./cohort";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
   // Cohorts, most relevant first: those with active groups, newest first.
   const info = new Map<string, { latest: number; active: number }>();
   for (const g of allGroups) {
-    const key = g.cohort ?? "";
+    const key = cohortKey(g.cohort);
     const cur = info.get(key) ?? { latest: 0, active: 0 };
     cur.latest = Math.max(cur.latest, new Date(g.createdAt).getTime());
     if (g.active) cur.active++;
@@ -40,13 +41,13 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
     .sort((a, b) => Number(b[1].active > 0) - Number(a[1].active > 0) || b[1].latest - a[1].latest)
     .map(([c]) => c);
 
-  const requested = sp.cohort === undefined ? undefined : sp.cohort === NO_COHORT ? "" : sp.cohort;
+  const requested = sp.cohort === undefined ? undefined : cohortKey(sp.cohort);
   const cohort = requested ?? cohorts[0] ?? "";
   const qs = (t: Tab) => `/admin/groups?cohort=${encodeURIComponent(cohort || NO_COHORT)}&tab=${t}`;
 
   let assign: React.ReactNode = null;
   if (tab === "assign") {
-    const cohortGroups = allGroups.filter((g) => (g.cohort ?? "") === cohort);
+    const cohortGroups = allGroups.filter((g) => cohortKey(g.cohort) === cohort);
     const cohortGroupIds = cohortGroups.map((g) => g.id);
     const people = await db
       .select({

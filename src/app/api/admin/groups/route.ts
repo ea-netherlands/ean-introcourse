@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql, eq } from "drizzle-orm";
 import { db, groups, participants, ensureMigrated } from "@/db";
+import { cohortKey } from "@/app/admin/groups/cohort";
 import { newId } from "@/lib/ids";
 
 export async function GET() {
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as { name?: string; cohort?: string; timing?: string };
     const name = body.name?.trim();
-    const cohort = body.cohort?.trim() || null;
+    const cohort = cohortKey(body.cohort) || null; // never store the page's "_none" placeholder
     const timing = body.timing?.trim() || null;
 
     if (!name) {

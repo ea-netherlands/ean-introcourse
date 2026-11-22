@@ -7,19 +7,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, ensureMigrated, fellowshipSessions } from "@/db";
 import { canAccessGroup, getCurrentParticipant } from "@/lib/auth";
+import { ADMIN_COOKIE, verifyAdminSession } from "@/lib/admin-session";
 
 interface Context { params: Promise<{ id: string }> }
 
 export async function PATCH(req: NextRequest, { params }: Context) {
   await ensureMigrated();
   const { id } = await params;
-  const me = await getCurrentParticipant().catch(() => null);
-  if (!me || me.status !== "active" || (me.role !== "facilitator" && me.role !== "admin")) {
+  // The admin login (from /admin/sessions/[id]) may edit any session.
+  const isAdmin = await verifyAdminSession(req.cookies.get(ADMIN_COOKIE)?.value, process.env.ADMIN_PASSWORD);
+  const me = isAdmin ? null : await getCurrentParticipant().catch(() => null);
+  if (!isAdmin && (!me || me.status !== "active" || (me.role !== "facilitator" && me.role !== "admin"))) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
   const [s] = await db.select().from(fellowshipSessions).where(eq(fellowshipSessions.id, id)).limit(1);
   if (!s) return NextResponse.json({ error: "Session not found" }, { status: 404 });
-  if (me.role !== "admin" && !(s.groupId && (await canAccessGroup(me, s.groupId)))) {
+  if (!isAdmin && me!.role !== "admin" && !(s.groupId && (await canAccessGroup(me!, s.groupId)))) {
     return NextResponse.json({ error: "Not your group" }, { status: 403 });
   }
 

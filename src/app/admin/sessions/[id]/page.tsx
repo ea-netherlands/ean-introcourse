@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui";
 import { AttendanceToggle } from "./attendance-toggle";
 import { DeleteSessionButton } from "./delete-button";
+import { EditSession } from "@/app/sessions/session-tools";
 
 export const dynamic = "force-dynamic";
 
@@ -131,7 +132,8 @@ export default async function SessionDetailPage({ params }: Props) {
           )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
+        <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-start gap-3">
+          <EditSession key={`${id}-${session.meetLink ?? ""}-${session.scheduledAt.toISOString()}`} id={id} scheduledAt={session.scheduledAt.toISOString()} meetLink={session.meetLink} />
           <DeleteSessionButton sessionId={id} />
         </div>
       </div>

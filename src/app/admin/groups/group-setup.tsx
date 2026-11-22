@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GROUP_TIMESLOTS, formatGroupTiming } from "@/lib/availability";
 import { NO_COHORT, cohortKey } from "./cohort";
+import { cohortDates } from "@/lib/cohort-dates";
 
 const NEW_COHORT = "__new__";
 
@@ -19,6 +20,8 @@ interface Slot {
   cohort: string | null;
   timing: string | null;
   dates: string[];
+  customDates: boolean;
+  cohortStart: string | null;
   language: string | null;
   format: string | null;
   location: string | null;
@@ -91,13 +94,18 @@ function GroupCard({
     capacity: slot.capacity == null ? "" : String(slot.capacity),
     bookable: slot.bookable,
   });
+  // Dates follow the cohort start unless the group has its own (an exception). Without a
+  // cohort start the group needs its own dates.
+  const [ownDates, setOwnDates] = useState(slot.customDates || !slot.cohortStart);
+  const cohortComputed = cohortDates(slot.cohortStart, form.timing);
+  const shownDates = ownDates ? form.dates : Array.from({ length: SESSION_COUNT }, (_, i) => cohortComputed[i] ?? "");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; tone: "ok" | "warn" | "error" } | null>(null);
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => { setForm((f) => ({ ...f, [k]: v })); setMessage(null); };
 
   const missing: string[] = [];
   if (!form.timing) missing.push("day & time");
-  if (!form.dates.some(Boolean)) missing.push("dates");
+  if (!shownDates.some(Boolean)) missing.push(slot.cohortStart || ownDates ? "dates" : "dates (set the cohort start date above)");
   if (form.capacity === "") missing.push("number of places");
   const full = slot.capacity != null && slot.booked >= slot.capacity;
 
@@ -115,7 +123,8 @@ function GroupCard({
       name: form.name,
       ...(moving ? { cohort: targetCohort || null } : {}),
       timing: form.timing || null,
-      dates: form.dates.filter(Boolean),
+      // [] = follow the cohort start again; a list = this group's own dates (exception)
+      dates: ownDates ? form.dates.filter(Boolean) : [],
       facilitatorId: form.facilitatorId || null,
       language: form.language || null,
       format: form.format || null,
@@ -239,25 +248,51 @@ function GroupCard({
 
       <div>
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-          <span className={label}>Session dates</span>
-          <button
-            type="button"
-            disabled={!form.dates[0]}
-            onClick={() => set("dates", form.dates.map((d, i) => (i === 0 ? d : addDays(form.dates[0], 7 * i))))}
-            className="text-xs font-medium text-teal-700 hover:underline disabled:opacity-40"
-          >
-            Fill weekly from the first date
-          </button>
+          <span className={label}>
+            Session dates{" "}
+            <span className="font-normal text-slate-400">
+              {!ownDates
+                ? "· follow the cohort start; change a date to make an exception"
+                : slot.cohortStart
+                  ? "· own dates for this group (exception)"
+                  : "· set a cohort start date above, or fill them in here"}
+            </span>
+          </span>
+          <span className="flex gap-3">
+            {ownDates && slot.cohortStart && (
+              <button
+                type="button"
+                onClick={() => { setOwnDates(false); setMessage(null); }}
+                className="text-xs font-medium text-teal-700 hover:underline"
+              >
+                Follow the cohort dates again
+              </button>
+            )}
+            {ownDates && (
+              <button
+                type="button"
+                disabled={!form.dates[0]}
+                onClick={() => set("dates", form.dates.map((d, i) => (i === 0 ? d : addDays(form.dates[0], 7 * i))))}
+                className="text-xs font-medium text-teal-700 hover:underline disabled:opacity-40"
+              >
+                Fill weekly from the first date
+              </button>
+            )}
+          </span>
         </div>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
-          {form.dates.map((d, i) => (
+          {shownDates.map((d, i) => (
             <input
               key={i}
               type="date"
               aria-label={`Session ${i + 1} date`}
-              className={input}
+              className={`${input} ${ownDates ? "" : "bg-slate-50 text-slate-600"}`}
               value={d}
-              onChange={(e) => set("dates", form.dates.map((x, j) => (j === i ? e.target.value : x)))}
+              onChange={(e) => {
+                // Changing a date makes this group's dates an exception to the cohort.
+                set("dates", shownDates.map((x, j) => (j === i ? e.target.value : x)));
+                setOwnDates(true);
+              }}
             />
           ))}
         </div>
@@ -294,6 +329,9 @@ export function GroupSetup({ cohort, cohorts = [] }: { cohort: string; cohorts?:
   const router = useRouter();
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [facilitators, setFacilitators] = useState<Facilitator[]>([]);
+  const [cohortStart, setCohortStart] = useState<string | null>(null);
+  const [startInput, setStartInput] = useState("");
+  const [startMsg, setStartMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [showClosed, setShowClosed] = useState(false);
@@ -308,7 +346,10 @@ export function GroupSetup({ cohort, cohorts = [] }: { cohort: string; cohorts?:
     const data = await res.json();
     setSlots(data.slots);
     setFacilitators(data.facilitators);
-  }, []);
+    const start = (data.cohorts as { name: string; startDate: string | null }[] | undefined)?.find((c) => c.name === cohort)?.startDate ?? null;
+    setCohortStart(start);
+    setStartInput(start ?? "");
+  }, [cohort]);
   useEffect(() => { load(); }, [load]);
 
   const changed = useCallback(() => { load(); router.refresh(); }, [load, router]);
@@ -324,6 +365,21 @@ export function GroupSetup({ cohort, cohorts = [] }: { cohort: string; cohorts?:
     setCreating(false);
     if (!res?.ok) { setError("Could not create the group."); return; }
     setNewName("");
+    changed();
+  }
+
+  async function saveStart() {
+    setStartMsg(null);
+    const res = await fetch("/api/admin/cohorts", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: cohort, startDate: startInput || null }),
+    }).catch(() => null);
+    if (!res?.ok) {
+      setStartMsg({ text: res?.status === 401 ? "Not saved: your admin session expired. Reload and sign in again." : "Could not save the start date.", ok: false });
+      return;
+    }
+    setStartMsg({ text: "Saved. Group dates and sessions have been updated.", ok: true });
     changed();
   }
 
@@ -347,6 +403,32 @@ export function GroupSetup({ cohort, cohorts = [] }: { cohort: string; cohorts?:
         away; rejecting the application frees it again. {open.length} active group{open.length === 1 ? "" : "s"} ·{" "}
         {bookable.length} open for booking · {totalBooked} of {totalPlaces} places booked.
       </p>
+
+      {cohort ? (
+        <div className="card-ean flex flex-wrap items-end gap-3 p-4">
+          <div>
+            <span className={label}>Start date of {cohort}</span>
+            <input type="date" className={input} value={startInput} onChange={(e) => { setStartInput(e.target.value); setStartMsg(null); }} />
+          </div>
+          <button
+            type="button"
+            onClick={saveStart}
+            disabled={(startInput || null) === cohortStart}
+            className="btn-pill btn-pill-primary h-9 px-4 text-sm disabled:opacity-50"
+          >
+            Save start date
+          </button>
+          <p className="min-w-[14rem] flex-1 text-xs text-slate-500">
+            Shared by all groups of this cohort. Each group meets on its own day &amp; time: week 1 is the first such
+            day from this date, then weekly. Sessions are created automatically once a group has a facilitator.
+          </p>
+          {startMsg && <p className={`w-full text-sm ${startMsg.ok ? "text-teal-700" : "text-red-600"}`}>{startMsg.text}</p>}
+        </div>
+      ) : (
+        <p className="text-xs text-slate-500">
+          Groups without a cohort have no shared start date: give them their own dates, or move them to a cohort.
+        </p>
+      )}
 
       <div className="card-ean flex flex-wrap items-end gap-3 p-4">
         <div className="min-w-[14rem] flex-1">
@@ -381,7 +463,7 @@ export function GroupSetup({ cohort, cohorts = [] }: { cohort: string; cohorts?:
         <p className="text-sm text-slate-500">No active groups in this cohort yet. Add one above.</p>
       ) : (
         open.map((s) => <GroupCard
-            key={s.id}
+            key={`${s.id}-${s.cohortStart ?? ""}`}
             slot={s}
             facilitators={facilitators}
             cohorts={cohorts}

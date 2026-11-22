@@ -6,14 +6,14 @@
  */
 import { NextResponse } from "next/server";
 import { and, count, eq, isNotNull } from "drizzle-orm";
-import { db, ensureMigrated, participants } from "@/db";
+import { cohorts, db, ensureMigrated, participants } from "@/db";
 import { listSlots } from "@/lib/slots";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   await ensureMigrated();
-  const [slots, facilitators, members] = await Promise.all([
+  const [slots, facilitators, members, cohortRows] = await Promise.all([
     listSlots({ bookableOnly: false, includeClosed: true }),
     db
       .select({ id: participants.id, name: participants.name })
@@ -25,10 +25,12 @@ export async function GET() {
       .from(participants)
       .where(isNotNull(participants.groupId))
       .groupBy(participants.groupId),
+    db.select({ name: cohorts.name, startDate: cohorts.startDate }).from(cohorts),
   ]);
   const memberCount = new Map(members.map((m) => [m.groupId, Number(m.n)]));
   return NextResponse.json({
     slots: slots.map((s) => ({ ...s, memberCount: memberCount.get(s.id) ?? 0 })),
     facilitators,
+    cohorts: cohortRows,
   });
 }

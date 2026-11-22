@@ -8,7 +8,8 @@
  */
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
-import { applications, db, ensureMigrated, groups, participants } from "@/db";
+import { applications, cohorts, db, ensureMigrated, groups, participants } from "@/db";
+import { effectiveDates } from "@/lib/cohort-dates";
 import type * as schema from "@/db/schema";
 import { formatGroupTiming } from "@/lib/availability";
 
@@ -28,7 +29,11 @@ export interface SlotView {
   name: string;
   timing: string | null;
   timingLabel: string;
+  /** The dates the group meets: its own exceptions, or computed from the cohort start. */
   dates: string[];
+  /** true when the group has its own dates instead of following the cohort start. */
+  customDates: boolean;
+  cohortStart: string | null;
   language: string | null;
   format: string | null;
   location: string | null;
@@ -81,9 +86,11 @@ export async function listSlots(opts: { bookableOnly: boolean; includeClosed?: b
       facilitatorId: participants.id,
       facilitatorName: participants.name,
       facilitatorAvatar: participants.avatarUrl,
+      cohortStart: cohorts.startDate,
     })
     .from(groups)
     .leftJoin(participants, eq(participants.id, groups.facilitatorId))
+    .leftJoin(cohorts, eq(cohorts.name, groups.cohort))
     .where(
       opts.bookableOnly
         ? and(eq(groups.active, true), eq(groups.bookable, true))
@@ -95,12 +102,15 @@ export async function listSlots(opts: { bookableOnly: boolean; includeClosed?: b
   const counts = await bookedCounts(rows.map((r) => r.id));
   return rows.map((r) => {
     const booked = counts.get(r.id) ?? 0;
+    const eff = effectiveDates(r, r.cohortStart);
     return {
       id: r.id,
       name: r.name,
       timing: r.timing,
       timingLabel: formatGroupTiming(r.timing),
-      dates: Array.isArray(r.dates) ? r.dates : [],
+      dates: eff.dates,
+      customDates: eff.custom,
+      cohortStart: r.cohortStart ?? null,
       language: r.language,
       format: r.format,
       location: r.location,

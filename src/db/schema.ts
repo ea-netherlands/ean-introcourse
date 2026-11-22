@@ -238,6 +238,10 @@ export const fellowshipSessions = pgTable("fellowship_sessions", {
   meetLink: text("meet_link"),
   agenda: text("agenda"),
   prepModuleId: text("prep_module_id").references(() => modules.id),
+  // Automatic sessions (src/lib/session-sync.ts): course week 1-5, null for hand-made sessions.
+  week: integer("week"),
+  // Set when a facilitator/admin moved the date by hand: the sync then leaves the time alone.
+  timeLocked: boolean("time_locked").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -412,3 +416,12 @@ export const groupChecklist = pgTable(
   },
   (t) => [uniqueIndex("group_checklist_pk").on(t.groupId, t.itemKey)]
 );
+
+// ---------- cohorts ----------
+// Shared settings of a cohort (groups.cohort holds the name). start_date = YYYY-MM-DD.
+
+export const cohorts = pgTable("cohorts", {
+  name: text("name").primaryKey(),
+  startDate: text("start_date"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});

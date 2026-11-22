@@ -5,6 +5,7 @@ import { newId } from "@/lib/ids";
 import { randomBytes, createHash } from "crypto";
 import { sendEmail, btn, escapeHtml } from "@/lib/email";
 import { appUrl } from "@/lib/url";
+import { syncGroupSessions } from "@/lib/session-sync";
 import { describeSlot, getSlot } from "@/lib/slots";
 
 const TOKEN_DAYS = 7;
@@ -81,5 +82,7 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
     `,
   });
 
+  // New member: give them the group's upcoming sessions (reminders).
+  if (app.slotId) await syncGroupSessions(app.slotId);
   return NextResponse.json({ ok: true });
 }

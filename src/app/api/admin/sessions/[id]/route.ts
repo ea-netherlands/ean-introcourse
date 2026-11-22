@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
 
   const update: Record<string, unknown> = {};
   if ("title" in body)        update.title        = body.title;
-  if ("scheduledAt" in body)  update.scheduledAt  = new Date(body.scheduledAt as string);
+  if ("scheduledAt" in body)  { update.scheduledAt = new Date(body.scheduledAt as string); update.timeLocked = true; } // moved by hand: the automatic sync keeps it
   if ("meetLink" in body)     update.meetLink     = body.meetLink || null;
   if ("agenda" in body)       update.agenda       = body.agenda   || null;
   if ("groupId" in body)      update.groupId      = body.groupId  || null;

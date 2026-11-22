@@ -9,6 +9,7 @@ import {
 } from "@/db";
 import { sendEmail, btn, escapeHtml } from "@/lib/email";
 import { googleCalendarUrl } from "@/lib/calendar";
+import { syncAllSessions } from "@/lib/session-sync";
 import { appUrl } from "@/lib/url";
 
 /**
@@ -36,6 +37,8 @@ export async function GET(req: NextRequest) {
   }
 
   await ensureMigrated();
+  // Create/move automatic sessions and add late joiners before sending reminders.
+  const synced = await syncAllSessions().catch((e) => { console.error("[cron:daily] sync", e); return null; });
   const now = new Date();
   const until = new Date(now.getTime() + REMINDER_WINDOW_HOURS * 60 * 60 * 1000);
 
@@ -111,5 +114,5 @@ export async function GET(req: NextRequest) {
   }
 
   console.log(`[cron:daily] ran at ${now.toISOString()}, reminders sent: ${sent}`);
-  return NextResponse.json({ ok: true, ran: now.toISOString(), remindersSent: sent });
+  return NextResponse.json({ ok: true, ran: now.toISOString(), remindersSent: sent, sessions: synced });
 }

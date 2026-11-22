@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, eq, count } from "drizzle-orm";
 import { cohortKey } from "@/app/admin/groups/cohort";
+import { syncGroupSessions } from "@/lib/session-sync";
 import { db, groups, participants, fellowshipSessions, ensureMigrated } from "@/db";
 
 interface Context { params: Promise<{ id: string }> }
@@ -69,6 +70,8 @@ export async function PATCH(req: NextRequest, { params }: Context) {
       await db.update(participants).set({ groupId: id }).where(eq(participants.id, fac.id));
     }
   }
+  // Sessions follow the group (dates, time, facilitator): create/move them automatically.
+  await syncGroupSessions(id);
   return NextResponse.json({ ok: true });
 }
 

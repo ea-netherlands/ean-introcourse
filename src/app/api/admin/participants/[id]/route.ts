@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { syncGroupSessions } from "@/lib/session-sync";
 import {
   db,
   participants,
@@ -46,6 +47,8 @@ export async function PATCH(req: NextRequest, { params }: Context) {
   }
 
   await db.update(participants).set(update).where(eq(participants.id, id));
+  // Moved into a group: add them to its upcoming sessions (reminders).
+  if (typeof update.groupId === "string") await syncGroupSessions(update.groupId);
   return NextResponse.json({ ok: true });
 }
 

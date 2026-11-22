@@ -9,7 +9,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GROUP_TIMESLOTS, formatGroupTiming } from "@/lib/availability";
-import { cohortKey } from "./cohort";
+import { NO_COHORT, cohortKey } from "./cohort";
+
+const NEW_COHORT = "__new__";
 
 interface Slot {
   id: string;
@@ -60,7 +62,24 @@ async function patchGroup(id: string, body: Record<string, unknown>) {
   return { ok: !!res?.ok, status: res?.status ?? 0, note: data.note as string | undefined, error: data.error as string | undefined };
 }
 
-function GroupCard({ slot, facilitators, onChanged }: { slot: Slot; facilitators: Facilitator[]; onChanged: () => void }) {
+function GroupCard({
+  slot,
+  facilitators,
+  cohorts,
+  onChanged,
+  onMoved,
+}: {
+  slot: Slot;
+  facilitators: Facilitator[];
+  cohorts: string[];
+  onChanged: () => void;
+  onMoved: (groupName: string, cohort: string) => void;
+}) {
+  const currentCohort = cohortKey(slot.cohort);
+  const [cohortChoice, setCohortChoice] = useState(currentCohort);
+  const [newCohort, setNewCohort] = useState("");
+  const targetCohort = cohortChoice === NEW_COHORT ? newCohort.trim() : cohortChoice;
+  const moving = targetCohort !== currentCohort && !(cohortChoice === NEW_COHORT && !newCohort.trim());
   const [form, setForm] = useState({
     name: slot.name,
     timing: slot.timing ?? "",
@@ -87,9 +106,14 @@ function GroupCard({ slot, facilitators, onChanged }: { slot: Slot; facilitators
   }
 
   async function save() {
+    if (cohortChoice === NEW_COHORT && !newCohort.trim()) {
+      setMessage({ text: "Type a name for the new cohort, or pick an existing one.", tone: "error" });
+      return;
+    }
     setBusy(true);
     const r = await patchGroup(slot.id, {
       name: form.name,
+      ...(moving ? { cohort: targetCohort || null } : {}),
       timing: form.timing || null,
       dates: form.dates.filter(Boolean),
       facilitatorId: form.facilitatorId || null,
@@ -102,6 +126,7 @@ function GroupCard({ slot, facilitators, onChanged }: { slot: Slot; facilitators
     setBusy(false);
     if (!r.ok) return fail(r.status, r.error);
     setMessage(r.note ? { text: `Saved. ${r.note}`, tone: "warn" } : { text: "Saved", tone: "ok" });
+    if (moving) onMoved(form.name, targetCohort);
     onChanged();
   }
 
@@ -150,6 +175,29 @@ function GroupCard({ slot, facilitators, onChanged }: { slot: Slot; facilitators
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <span className={label}>Cohort</span>
+          <select className={input} value={cohortChoice} onChange={(e) => { setCohortChoice(e.target.value); setMessage(null); }}>
+            {[...new Set([currentCohort, ...cohorts])].map((c) => (
+              <option key={c || NO_COHORT} value={c}>{c || "No cohort"}{c === currentCohort ? " (current)" : ""}</option>
+            ))}
+            <option value={NEW_COHORT}>+ New cohort…</option>
+          </select>
+          {cohortChoice === NEW_COHORT && (
+            <input
+              className={`${input} mt-2`}
+              autoFocus
+              value={newCohort}
+              onChange={(e) => { setNewCohort(e.target.value); setMessage(null); }}
+              placeholder="e.g. Spring 2027"
+            />
+          )}
+          {moving && (
+            <p className="mt-1 text-xs text-amber-700">
+              Saving moves this group{slot.memberCount ? ` and its ${slot.memberCount} ${slot.memberCount === 1 ? "person" : "people"}` : ""} to {targetCohort || "No cohort"}.
+            </p>
+          )}
+        </div>
         <div>
           <span className={label}>Day &amp; time</span>
           <select className={input} value={form.timing} onChange={(e) => set("timing", e.target.value)}>
@@ -241,7 +289,8 @@ function GroupCard({ slot, facilitators, onChanged }: { slot: Slot; facilitators
   );
 }
 
-export function GroupSetup({ cohort }: { cohort: string }) {
+export function GroupSetup({ cohort, cohorts = [] }: { cohort: string; cohorts?: string[] }) {
+  const [moved, setMoved] = useState<{ name: string; cohort: string } | null>(null);
   const router = useRouter();
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [facilitators, setFacilitators] = useState<Facilitator[]>([]);
@@ -315,6 +364,15 @@ export function GroupSetup({ cohort }: { cohort: string }) {
         </button>
       </div>
 
+      {moved && (
+        <p role="status" className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-slate-700">
+          Moved <strong>{moved.name}</strong> to <strong>{moved.cohort || "No cohort"}</strong>.{" "}
+          <a className="font-medium text-teal-700 underline" href={`/admin/groups?cohort=${encodeURIComponent(moved.cohort || NO_COHORT)}&tab=setup`}>
+            Go to that cohort
+          </a>
+        </p>
+      )}
+
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {slots === null ? (
@@ -322,7 +380,14 @@ export function GroupSetup({ cohort }: { cohort: string }) {
       ) : open.length === 0 ? (
         <p className="text-sm text-slate-500">No active groups in this cohort yet. Add one above.</p>
       ) : (
-        open.map((s) => <GroupCard key={s.id} slot={s} facilitators={facilitators} onChanged={changed} />)
+        open.map((s) => <GroupCard
+            key={s.id}
+            slot={s}
+            facilitators={facilitators}
+            cohorts={cohorts}
+            onChanged={changed}
+            onMoved={(name, c) => setMoved({ name, cohort: c })}
+          />)
       )}
 
       {closed.length > 0 && (

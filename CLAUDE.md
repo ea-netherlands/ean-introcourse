@@ -194,8 +194,8 @@ npx tsc --noEmit     # typecheck (passes as of 2026-11-12)
   (`src/app/admin/course-guide.tsx`; keep it in step with the admin pages). Nav: Applications | Groups |
   Tracker | Participants | Facilitators | Sessions. Applications (bulk accept/reject, delete); participants (table with
   bulk select/delete, prev/next on detail, CSV export); **groups** = one page per cohort (`?cohort=`, picker
-  + "New cohort") with tab **Set up** (`group-setup.tsx`: slot settings, name, close/reactivate, delete when
-  empty; closing marks its participants completed, not its facilitator) and tab **Assign people**
+  + "New cohort") with tab **Set up** (`group-setup.tsx`: slot settings, name, cohort (move to another or a new cohort),
+  close/reactivate, delete when empty; closing marks its participants completed, not its facilitator) and tab **Assign people**
   (`assign-people.tsx`, the old Form Groups matcher, limited to people without a group or in this cohort).
   `/admin/slots` and `/admin/form-groups` redirect there. Facilitators (one-click Approve, add directly);
   sessions (`?group=` picks a group: its details, a form for that group with "Plan N sessions" from

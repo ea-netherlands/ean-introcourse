@@ -46,9 +46,11 @@ const STEPS: Step[] = [
           then add a group per time slot under <em>1. Set up groups</em>.
         </p>
         <p>
-          For each group fill in day &amp; time, the first session date (then &ldquo;Fill weekly from the first
-          date&rdquo;), facilitator, language, online/in person and number of places (usually 6–8). Tick{" "}
-          <strong>Open for booking</strong> and save. Open groups appear on the application form straight away.
+          Set the cohort&apos;s <strong>start date</strong> once at the top. For each group fill in day &amp; time,
+          facilitator, language, online/in person and number of places (usually 6–8): its five dates follow from the
+          start date (you can still change one date, e.g. for a holiday). Tick <strong>Open for booking</strong> and
+          save. Open groups appear on the application form straight away, and each group&apos;s sessions are created
+          automatically once it has a facilitator.
         </p>
       </>
     ),
@@ -113,10 +115,11 @@ const STEPS: Step[] = [
     body: (
       <>
         <p>
-          Facilitators plan their five sessions on their own Sessions page (with a Google Meet link) and
-          read the facilitator guide. Their <strong>checklist</strong> (invite email, Meet link, group chat, preparing each
+          The five sessions of each group already exist (created automatically). Facilitators add their meeting
+          link on their Sessions page (once for all sessions), move a session if needed, and read the facilitator guide. Their <strong>checklist</strong> (invite email, Meet link, group chat, preparing each
           session…) is on their group&apos;s Overview page and on the guide page; follow their progress in the{" "}
-          <A href="/admin/tracker">Tracker</A>. Participants get an automatic reminder email 24 hours before each session.
+          <A href="/admin/tracker">Tracker</A>. Check in <A href="/admin/sessions">Sessions</A> that every group has its
+          sessions and a link. Participants get an automatic reminder email 24 hours before each session.
         </p>
       </>
     ),

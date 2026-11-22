@@ -11,11 +11,14 @@ import {
   ensureMigrated,
   fellowshipSessions,
   groups,
+  cohorts,
   participants,
 } from "@/db";
 import { getCurrentParticipant, myGroups } from "@/lib/auth";
 import { SiteHeader } from "@/components/site-header";
 import { FacilitatorSessionForm } from "./facilitator-session-form";
+import { EditSession, GroupMeetLink } from "./session-tools";
+import { effectiveDates } from "@/lib/cohort-dates";
 import { googleCalendarConfigured } from "@/lib/google-calendar";
 
 export const dynamic = "force-dynamic";
@@ -29,9 +32,12 @@ export default async function SessionsPage() {
   const isAdmin = me.role === "admin";
 
   // Get all groups (admin) or the groups this facilitator leads (can be several)
-  const allGroups = await db
-    .select({ id: groups.id, name: groups.name, timing: groups.timing, dates: groups.dates })
-    .from(groups);
+  const allGroups = (
+    await db
+      .select({ id: groups.id, name: groups.name, timing: groups.timing, dates: groups.dates, cohortStart: cohorts.startDate })
+      .from(groups)
+      .leftJoin(cohorts, eq(cohorts.name, groups.cohort))
+  ).map((g) => ({ ...g, dates: effectiveDates(g, g.cohortStart).dates }));
   const ownGroupIds = new Set((await myGroups(me)).map((g) => g.id));
 
   // Get all facilitators for the form
@@ -87,20 +93,37 @@ export default async function SessionsPage() {
           </p>
         </div>
 
+        {/* Sessions are created automatically per group; facilitators add the link */}
+        {!isAdmin && ownGroupIds.size > 0 && (
+          <section className="card-ean space-y-4 p-5">
+            <div>
+              <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>Your groups&apos; sessions</h2>
+              <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+                Your five sessions per group are created automatically from the cohort start date and your group&apos;s
+                day &amp; time. Add the meeting link once for all sessions; use Edit on a session to move it.
+              </p>
+            </div>
+            {allGroups.filter((g) => ownGroupIds.has(g.id)).map((g) => {
+              const links = [...new Set(upcoming.filter((x) => x.groupId === g.id).map((x) => x.meetLink ?? ""))];
+              return <GroupMeetLink key={g.id} groupId={g.id} groupName={g.name} current={links.length === 1 ? links[0] : ""} />;
+            })}
+          </section>
+        )}
+
         {/* Schedule new session */}
         <section
           className="rounded-2xl p-5"
           style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
         >
           <h2 className="text-base font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
-            Schedule a new session
+            {isAdmin ? "Schedule a new session" : "Add an extra session"}
           </h2>
           <FacilitatorSessionForm
             groups={(isAdmin ? allGroups : allGroups.filter((g) => ownGroupIds.has(g.id))).map((g) => ({
               id: g.id,
               name: g.name,
               timing: g.timing,
-              dates: Array.isArray(g.dates) ? (g.dates as string[]) : [],
+              dates: g.dates,
               // Days that already have a session, so the default date skips them (Amsterdam time).
               plannedDays: sessionRows
                 .filter((x) => x.groupId === g.id)
@@ -123,7 +146,7 @@ export default async function SessionsPage() {
               {upcoming.map((s) => (
                 <div
                   key={s.id}
-                  className="rounded-xl p-4 flex items-center justify-between gap-3"
+                  className="rounded-xl p-4 flex flex-wrap items-center justify-between gap-3"
                   style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
                 >
                   <div className="flex items-center gap-3">
@@ -139,6 +162,7 @@ export default async function SessionsPage() {
                         {s.groupName}
                       </span>
                     )}
+                    <EditSession key={`${s.id}-${s.meetLink ?? ""}-${s.scheduledAt.toISOString()}`} id={s.id} scheduledAt={s.scheduledAt.toISOString()} meetLink={s.meetLink} />
                     {s.meetLink && (
                       <a
                         href={s.meetLink}

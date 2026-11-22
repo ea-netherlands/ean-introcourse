@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export const NO_COHORT = "_none";
+import { NO_COHORT } from "./cohort";
 
 /** Choose which cohort the Groups page shows, or start a new one. */
 export function CohortPicker({ cohorts, current, tab }: { cohorts: string[]; current: string; tab: string }) {
@@ -32,7 +32,7 @@ export function CohortPicker({ cohorts, current, tab }: { cohorts: string[]; cur
       {adding ? (
         <form
           className="flex items-center gap-2"
-          onSubmit={(e) => { e.preventDefault(); if (name.trim()) { setAdding(false); go(name.trim()); setName(""); } }}
+          onSubmit={(e) => { e.preventDefault(); const n = name.trim(); if (n && n !== NO_COHORT) { setAdding(false); go(n); setName(""); } }}
         >
           <input
             autoFocus

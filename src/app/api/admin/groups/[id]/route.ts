@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { and, eq, count } from "drizzle-orm";
+import { cohortKey } from "@/app/admin/groups/cohort";
 import { db, groups, participants, fellowshipSessions, ensureMigrated } from "@/db";
 
 interface Context { params: Promise<{ id: string }> }
@@ -16,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
 
   const update: Record<string, unknown> = {};
   if ("name" in body && body.name?.trim()) update.name = body.name.trim();
-  if ("cohort" in body) update.cohort = body.cohort || null;
+  if ("cohort" in body) update.cohort = cohortKey(typeof body.cohort === "string" ? body.cohort : null) || null;
   if ("timing" in body) update.timing = body.timing || null;
   // Slot booking settings (see src/lib/slots.ts)
   if ("dates" in body) {

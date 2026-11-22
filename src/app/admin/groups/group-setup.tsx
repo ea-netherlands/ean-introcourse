@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GROUP_TIMESLOTS, formatGroupTiming } from "@/lib/availability";
+import { cohortKey } from "./cohort";
 
 interface Slot {
   id: string;
@@ -283,7 +284,7 @@ export function GroupSetup({ cohort }: { cohort: string }) {
     changed();
   }
 
-  const inCohort = (slots ?? []).filter((s) => (s.cohort ?? "") === cohort);
+  const inCohort = (slots ?? []).filter((s) => cohortKey(s.cohort) === cohort);
   const open = inCohort.filter((s) => s.active);
   const closed = inCohort.filter((s) => !s.active);
   const bookable = open.filter((s) => s.bookable);

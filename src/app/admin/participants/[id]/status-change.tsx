@@ -16,17 +16,24 @@ export function StatusChange({
   const [value, setValue] = useState<Status>(currentStatus as Status);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   async function save() {
     setSaving(true);
     setSaved(false);
-    await fetch(`/api/admin/participants/${participantId}`, {
+    setError("");
+    // Only say "Saved" when the server really saved it (an expired admin session returns 401).
+    const res = await fetch(`/api/admin/participants/${participantId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: value }),
-    });
+    }).catch(() => null);
     setSaving(false);
+    if (!res || !res.ok) {
+      setError(res?.status === 401 ? "Not saved: your admin session expired. Reload the page and sign in again." : "Not saved. Please try again.");
+      return;
+    }
     setSaved(true);
     router.refresh();
   }
@@ -49,6 +56,7 @@ export function StatusChange({
       >
         {saving ? "Saving…" : saved ? "Saved ✓" : "Save status"}
       </button>
+      {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   );
 }

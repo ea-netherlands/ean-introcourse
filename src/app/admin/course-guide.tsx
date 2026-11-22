@@ -114,12 +114,16 @@ const STEPS: Step[] = [
       <>
         <p>
           Facilitators plan their five sessions on their own Sessions page (with a Google Meet link) and
-          read the facilitator guide. Check in <A href="/admin/sessions">Sessions</A> that every group has its
-          sessions. Participants get an automatic reminder email 24 hours before each session.
+          read the facilitator guide. Their <strong>checklist</strong> (invite email, Meet link, group chat, preparing each
+          session…) is on their group&apos;s Overview page and on the guide page; follow their progress in the{" "}
+          <A href="/admin/tracker">Tracker</A>. Participants get an automatic reminder email 24 hours before each session.
         </p>
       </>
     ),
-    links: [{ href: "/admin/sessions", label: "Sessions" }],
+    links: [
+      { href: "/admin/tracker", label: "Tracker" },
+      { href: "/admin/sessions", label: "Sessions" },
+    ],
   },
   {
     title: "Run the five weeks",
@@ -128,14 +132,16 @@ const STEPS: Step[] = [
       <>
         <p>
           Each week participants do the materials (about 3.5 hours) before their 75-minute discussion.
-          Facilitators follow progress, quiz answers and comments on their group&apos;s Overview page and mark
-          attendance in Sessions. Use the participant detail pages to see who is falling behind.
+          Facilitators follow progress, quiz answers and comments on their group&apos;s Overview page, mark
+          <strong> attendance</strong> per week there (present, partly, absent) and tick off their checklist. The{" "}
+          <A href="/admin/tracker">Tracker</A> shows every group of the cohort: who is Strong, Moderate or Weak, and
+          which facilitator tasks are still open. Check in with people whose attendance drops.
         </p>
       </>
     ),
     links: [
+      { href: "/admin/tracker", label: "Tracker" },
       { href: "/admin/participants", label: "Participants" },
-      { href: "/admin/sessions", label: "Attendance" },
     ],
   },
   {
@@ -148,7 +154,8 @@ const STEPS: Step[] = [
           participants are marked finished: they see the graduation page and are invited to fill in the
           follow-up form (EAN Fellowship). Facilitators stay active for the next round.
         </p>
-        <p>Export the participants as CSV for your records, then start the next cohort at step 2.</p>
+        <p>Check in the Tracker that facilitators sent the feedback form and shared their experience. Export the
+          participants as CSV for your records, then start the next cohort at step 2.</p>
       </>
     ),
     links: [

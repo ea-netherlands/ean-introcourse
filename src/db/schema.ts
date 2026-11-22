@@ -385,3 +385,30 @@ export const lessonComments = pgTable(
     index("lc_cohort_created_idx").on(t.cohort, t.createdAt),
   ]
 );
+
+// ---------- group_attendance / group_checklist ----------
+// The facilitator tracker (was the "Checklists & trackers" spreadsheet), see src/lib/tracker.ts.
+
+export const groupAttendance = pgTable(
+  "group_attendance",
+  {
+    groupId: text("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+    participantId: text("participant_id").notNull().references(() => participants.id, { onDelete: "cascade" }),
+    week: integer("week").notNull(), // 1-5
+    status: text("status").notNull(), // "present" | "partly" | "absent"
+    updatedBy: text("updated_by"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("group_attendance_pk").on(t.groupId, t.participantId, t.week)]
+);
+
+export const groupChecklist = pgTable(
+  "group_checklist",
+  {
+    groupId: text("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+    itemKey: text("item_key").notNull(), // "<task>@<phase>"
+    doneBy: text("done_by"),
+    doneAt: timestamp("done_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("group_checklist_pk").on(t.groupId, t.itemKey)]
+);

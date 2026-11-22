@@ -6,13 +6,25 @@ import { useRouter } from "next/navigation";
 import { NO_COHORT } from "./cohort";
 
 /** Choose which cohort the Groups page shows, or start a new one. */
-export function CohortPicker({ cohorts, current, tab }: { cohorts: string[]; current: string; tab: string }) {
+export function CohortPicker({
+  cohorts,
+  current,
+  tab,
+  basePath = "/admin/groups",
+  allowNew = true,
+}: {
+  cohorts: string[];
+  current: string;
+  tab?: string;
+  basePath?: string;
+  allowNew?: boolean;
+}) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
 
   const go = (cohort: string) =>
-    router.push(`/admin/groups?cohort=${encodeURIComponent(cohort || NO_COHORT)}&tab=${tab}`);
+    router.push(`${basePath}?cohort=${encodeURIComponent(cohort || NO_COHORT)}${tab ? `&tab=${tab}` : ""}`);
 
   const options = cohorts.includes(current) ? cohorts : [current, ...cohorts];
 
@@ -29,7 +41,7 @@ export function CohortPicker({ cohorts, current, tab }: { cohorts: string[]; cur
           <option key={c || NO_COHORT} value={c}>{c || "No cohort"}</option>
         ))}
       </select>
-      {adding ? (
+      {!allowNew ? null : adding ? (
         <form
           className="flex items-center gap-2"
           onSubmit={(e) => { e.preventDefault(); const n = name.trim(); if (n && n !== NO_COHORT) { setAdding(false); go(n); setName(""); } }}

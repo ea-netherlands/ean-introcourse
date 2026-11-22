@@ -20,3 +20,12 @@ export function facilitatorGuideUrls() {
     pdf: `https://docs.google.com/document/d/${id}/export?format=pdf`,
   };
 }
+
+/**
+ * Link to a section of the guide (a Google Docs heading id, "h.…"). Heading ids only exist in
+ * the default doc, so with another doc configured this falls back to the top of that doc.
+ */
+export function facilitatorGuideSectionUrl(headingId?: string): string {
+  const { open } = facilitatorGuideUrls();
+  return headingId && facilitatorGuideDocId() === DEFAULT_DOC_ID ? `${open}#heading=${headingId}` : open;
+}
